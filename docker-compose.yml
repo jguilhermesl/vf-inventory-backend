@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  vf-inventory-pg:
+    image: bitnami/postgresql
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRESQL_USERNAME=vf-inventory
+      - POSTGRESQL_PASSWORD=11339955
+      - POSTGRESQL_DATABASE=vf-inventory
