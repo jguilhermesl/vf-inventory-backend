@@ -1,11 +1,11 @@
 import prismaClient from "@/services/prisma";
 import { Request, Response } from "express";
 
-export const getUserProfile = async (req: Request, res: Response) => {
+export const getProductProfile = async (req: Request, res: Response) => {
   try {
     const { id: userId } = req.params;
 
-    const user = await prismaClient.user.findUnique({
+    const user = await prismaClient.product.findUnique({
       where: {
         id: userId,
       },
