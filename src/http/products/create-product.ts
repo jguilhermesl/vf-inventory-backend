@@ -1,5 +1,6 @@
 import { HttpsCode } from "@/constants/errors";
 import { InternalServerError } from "@/errors/internal-server-error";
+import { ProductAlreadyExistsError } from "@/errors/product-already-exists-error";
 import prismaClient from "@/services/prisma";
 import { NextFunction, Request, Response } from "express";
 import { z } from "zod";
@@ -19,7 +20,7 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
     });
 
     if (existingProduct) {
-      return res.json({ message: "Produto já existente." }).status(HttpsCode.Conflict);
+      throw new ProductAlreadyExistsError()
     }
 
     await prismaClient.product.create({
