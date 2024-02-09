@@ -9,6 +9,8 @@ import { createProduct } from "@/http/products/create-product";
 import { deleteProduct } from "@/http/products/delete-product";
 import { editProduct } from "@/http/products/edit-product";
 import { getProductProfile } from "@/http/products/get-product";
+import { createInventory } from "@/http/inventory/create-intentory";
+import { editInventory } from "@/http/inventory/edit-inventory";
 
 const router = Router();
 
@@ -21,5 +23,7 @@ router.post("/products", createProduct);
 router.delete("/products/:id", deleteProduct);
 router.put("/products/:id", editProduct);
 router.get("/products/:id", getProductProfile);
+router.post("/inventory", isAuthenticated, createInventory);
+router.put("/inventory/:id", isAuthenticated, editInventory);
 
 export { router };
