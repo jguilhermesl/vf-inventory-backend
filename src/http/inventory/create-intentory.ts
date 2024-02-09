@@ -1,4 +1,4 @@
-// Importações dos módulos
+import { ItemNotFoundError } from "@/errors/item-not-found-error";
 import prismaClient from "@/services/prisma";
 import { Request, Response } from "express";
 import { z } from "zod";
@@ -6,23 +6,34 @@ import { z } from "zod";
 export const createInventory = async (req: Request, res: Response) => {
   try {
     const userId = req.userState.sub;
+
     const createInventoryBodySchema = z.object({
       lot: z.string(),
       price: z.number(),
       quantity: z.number(),
-      validty: z.string(),
+      validity: z.date(),
       productId: z.string(),
     });
 
-    const { lot, price, quantity, validty, productId } =
+    const { lot, price, quantity, validity, productId } =
       createInventoryBodySchema.parse(req.body);
+
+    const product = await prismaClient.product.findUnique({
+      where: {
+        id: productId
+      }
+    })
+
+    if (!product) {
+      throw new ItemNotFoundError()
+    }
 
     await prismaClient.inventory.create({
       data: {
         lot,
         price,
         quantity,
-        validty,
+        validity: new Date(validity),
         product: { connect: { id: productId } },
         createdBy: { connect: { id: userId } },
       },

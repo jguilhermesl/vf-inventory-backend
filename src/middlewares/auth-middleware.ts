@@ -17,7 +17,7 @@ export function isAuthenticated(
 
   verify(token, env.JWT_SECRET, (error, decoded) => {
     if (error) return res.status(401).json({ error });
-    console.log("é aqui:", decoded);
+
     req.userState = decoded as any;
     return next();
   });
