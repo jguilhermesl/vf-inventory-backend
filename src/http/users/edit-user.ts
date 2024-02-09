@@ -1,9 +1,10 @@
 import prismaClient from "@/services/prisma";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { z } from "zod";
 import { hash } from "bcryptjs"
+import { InternalServerError } from "@/errors/internal-server-error";
 
-export const editUser = async (req: Request, res: Response) => {
+export const editUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id: userId } = req.params;
 
@@ -31,7 +32,7 @@ export const editUser = async (req: Request, res: Response) => {
 
     return res.json({ message: "Usuário editado com sucesso." }).status(201);
   } catch (err) {
-    console.log(err)
-    return res.json({ message: "Algo aconteceu de errado." }).status(500)
+    next(err)
+    throw new InternalServerError();
   }
 };

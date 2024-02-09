@@ -1,7 +1,9 @@
+import { HttpsCode } from "@/constants/errors";
+import { InternalServerError } from "@/errors/internal-server-error";
 import prismaClient from "@/services/prisma";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 
-export const deleteProduct = async (req: Request, res: Response) => {
+export const deleteProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id: productId } = req.params;
 
@@ -11,8 +13,9 @@ export const deleteProduct = async (req: Request, res: Response) => {
       },
     });
 
-    return res.json({ message: "Product deletado com sucesso." }).status(201);
+    return res.json({ message: "Produto deletado com sucesso." }).status(HttpsCode.Success);
   } catch (err) {
-    return res.json({ message: "Algo aconteceu de errado." }).status(500);
+    next(err)
+    throw new InternalServerError();
   }
 };

@@ -1,9 +1,10 @@
-// Importações dos módulos
+import { HttpsCode } from "@/constants/errors";
+import { InternalServerError } from "@/errors/internal-server-error";
 import prismaClient from "@/services/prisma";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { z } from "zod";
 
-export const createProduct = async (req: Request, res: Response) => {
+export const createProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const createProductBodySchema = z.object({
       code: z.string(),
@@ -18,15 +19,16 @@ export const createProduct = async (req: Request, res: Response) => {
     });
 
     if (existingProduct) {
-      return res.json({ message: "Produto já existente." }).status(409); // Código 409 para conflito
+      return res.json({ message: "Produto já existente." }).status(HttpsCode.Conflict);
     }
 
     await prismaClient.product.create({
       data: { code, name, sigla },
     });
 
-    return res.json({ message: "Produto cadastrado com sucesso." }).status(201);
+    return res.json({ message: "Produto cadastrado com sucesso." }).status(HttpsCode.Created);
   } catch (err) {
-    return res.json({ message: "Algo aconteceu de errado." }).status(500);
+    next(err)
+    throw new InternalServerError();
   }
 };
