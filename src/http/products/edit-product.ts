@@ -1,8 +1,10 @@
+import { HttpsCode } from "@/constants/errors";
+import { InternalServerError } from "@/errors/internal-server-error";
 import prismaClient from "@/services/prisma";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { z } from "zod";
 
-export const editProduct = async (req: Request, res: Response) => {
+export const editProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id: userId } = req.params;
 
@@ -26,9 +28,9 @@ export const editProduct = async (req: Request, res: Response) => {
       },
     });
 
-    return res.json({ message: "Produto editado com sucesso." }).status(201);
+    return res.json({ message: "Produto editado com sucesso." }).status(HttpsCode.Success);
   } catch (err) {
-    console.log(err);
-    return res.json({ message: "Algo aconteceu de errado." }).status(500);
+    next(err)
+    throw new InternalServerError();
   }
 };

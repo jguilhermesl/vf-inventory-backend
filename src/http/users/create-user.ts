@@ -1,9 +1,11 @@
 import prismaClient from "@/services/prisma";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { z } from "zod";
 import { hash } from "bcryptjs";
+import { EmailAlreadyExistsError } from "@/errors/email-already-exists-error";
+import { InternalServerError } from "@/errors/internal-server-error";
 
-export const createUser = async (req: Request, res: Response) => {
+export const createUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const createUserBodySchema = z.object({
       name: z.string(),
@@ -23,7 +25,7 @@ export const createUser = async (req: Request, res: Response) => {
     });
 
     if (user) {
-      return res.json({ message: "Email já existente." }).status(408);
+      throw new EmailAlreadyExistsError()
     }
 
     await prismaClient.user.create({
@@ -37,6 +39,7 @@ export const createUser = async (req: Request, res: Response) => {
 
     return res.json({ message: "Usuário criado com sucesso." }).status(201);
   } catch (err) {
-    return res.json({ message: "Algo aconteceu de errado." }).status(500);
+    next(err)
+    throw new InternalServerError();
   }
 };
