@@ -1,9 +1,10 @@
+import { InternalServerError } from "@/errors/internal-server-error";
 import { ItemNotFoundError } from "@/errors/item-not-found-error";
 import prismaClient from "@/services/prisma";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { z } from "zod";
 
-export const createInventory = async (req: Request, res: Response) => {
+export const createInventory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.userState.sub;
 
@@ -41,7 +42,7 @@ export const createInventory = async (req: Request, res: Response) => {
 
     return res.json({ message: "Estoque cadastrado com sucesso." }).status(201);
   } catch (err) {
-    console.log(err);
-    return res.json({ message: "Algo aconteceu de errado." }).status(500);
+    next(err);
+    throw new InternalServerError()
   }
 };

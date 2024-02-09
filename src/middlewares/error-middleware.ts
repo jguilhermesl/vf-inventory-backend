@@ -8,6 +8,8 @@ export const errorMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
+  console.log(err)
+
   if (err instanceof EmailAlreadyExistsError) {
     return res.status(HttpsCode.InternalServerError).json({ error: err.message })
   }
