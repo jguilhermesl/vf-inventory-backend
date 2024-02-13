@@ -3,17 +3,17 @@ import { InternalServerError } from "@/errors/internal-server-error";
 import prismaClient from "@/services/prisma";
 import { NextFunction, Request, Response } from "express";
 
-export const getProductProfile = async (
+export const getInventoryProfile = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { id: userId } = req.params;
+    const { id: id } = req.params;
 
-    const user = await prismaClient.product.findUnique({
+    const user = await prismaClient.inventory.findUnique({
       where: {
-        id: userId,
+        id: id,
       },
     });
 

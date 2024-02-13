@@ -1,24 +1,20 @@
+import prismaClient from "@/services/prisma";
 import { HttpsCode } from "@/constants/errors";
 import { InternalServerError } from "@/errors/internal-server-error";
-import prismaClient from "@/services/prisma";
 import { NextFunction, Request, Response } from "express";
 
-export const getProductProfile = async (
+export const getAllInventoryItems = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { id: userId } = req.params;
+    const inventoryItems = await prismaClient.inventory.findMany();
+    console.log("Inventory Items:", inventoryItems);
 
-    const user = await prismaClient.product.findUnique({
-      where: {
-        id: userId,
-      },
-    });
-
-    return res.json({ user }).status(HttpsCode.Success);
+    return res.json({ inventoryItems }).status(HttpsCode.Success);
   } catch (err) {
+    console.error(err);
     next(err);
     throw new InternalServerError();
   }

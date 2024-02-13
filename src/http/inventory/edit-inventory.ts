@@ -4,28 +4,32 @@ import { z } from "zod";
 
 export const editInventory = async (req: Request, res: Response) => {
   try {
-    const { id: productId } = req.params;
+    const { id: id } = req.params;
 
     const createInventoryBodySchema = z.object({
-      lot: z.string(),
-      price: z.number(),
-      quantity: z.number(),
-      validty: z.string(),
+      lot: z.string().optional(),
+      price: z.number().optional(),
+      quantity: z.number().optional(),
+      validty: z.string().optional(),
+      productId: z.string().optional(),
+      userId: z.string().optional(),
     });
 
-    const { lot, price, quantity, validty } = createInventoryBodySchema.parse(
-      req.body
-    );
+    const { lot, price, quantity, validty, productId, userId } =
+      createInventoryBodySchema.parse(req.body);
 
     await prismaClient.inventory.update({
       where: {
-        id: productId,
+        id: id,
       },
       data: {
         ...(lot && { lot }),
         ...(price && { price }),
         ...(quantity && { quantity }),
         ...(validty && { validty }),
+        ...(productId && { productId }),
+        ...(userId && { userId }),
+
         updatedAt: new Date(),
       },
     });

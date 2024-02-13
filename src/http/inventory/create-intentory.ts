@@ -1,40 +1,30 @@
-import { InternalServerError } from "@/errors/internal-server-error";
-import { ItemNotFoundError } from "@/errors/item-not-found-error";
 import prismaClient from "@/services/prisma";
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import { z } from "zod";
 
-export const createInventory = async (req: Request, res: Response, next: NextFunction) => {
+export const createInventory = async (req: Request, res: Response) => {
   try {
-    const userId = req.userState.sub;
-
+    console.log("Corpo da requisição:", req.body);
+    const userId = "32d1abac-b63d-49dc-aeeb-95c28a144cb9";
     const createInventoryBodySchema = z.object({
       lot: z.string(),
       price: z.number(),
       quantity: z.number(),
-      validity: z.date(),
+      validty: z.string(),
       productId: z.string(),
     });
 
-    const { lot, price, quantity, validity, productId } =
+    const { lot, price, quantity, validty, productId } =
       createInventoryBodySchema.parse(req.body);
 
-    const product = await prismaClient.product.findUnique({
-      where: {
-        id: productId
-      }
-    })
-
-    if (!product) {
-      throw new ItemNotFoundError()
-    }
+    const validtyDate = new Date(validty);
 
     await prismaClient.inventory.create({
       data: {
         lot,
         price,
         quantity,
-        validity: new Date(validity),
+        validty: validtyDate,
         product: { connect: { id: productId } },
         createdBy: { connect: { id: userId } },
       },
@@ -42,7 +32,7 @@ export const createInventory = async (req: Request, res: Response, next: NextFun
 
     return res.json({ message: "Estoque cadastrado com sucesso." }).status(201);
   } catch (err) {
-    next(err);
-    throw new InternalServerError()
+    console.log("Aqui:", err);
+    return res.json({ message: "Algo aconteceu de errado." }).status(500);
   }
 };
