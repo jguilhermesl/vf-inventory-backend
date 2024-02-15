@@ -1,10 +1,13 @@
 import { InternalServerError } from "@/errors/internal-server-error";
-import { ItemNotFoundError } from "@/errors/item-not-found-error";
 import prismaClient from "@/services/prisma";
 import { NextFunction, Request, Response } from "express";
 import { z } from "zod";
 
-export const createInventory = async (req: Request, res: Response, next: NextFunction) => {
+export const createInventory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const userId = req.userState.sub;
 
@@ -12,22 +15,12 @@ export const createInventory = async (req: Request, res: Response, next: NextFun
       lot: z.string(),
       price: z.number(),
       quantity: z.number(),
-      validity: z.date(),
+      validity: z.string(),
       productId: z.string(),
     });
 
     const { lot, price, quantity, validity, productId } =
       createInventoryBodySchema.parse(req.body);
-
-    const product = await prismaClient.product.findUnique({
-      where: {
-        id: productId
-      }
-    })
-
-    if (!product) {
-      throw new ItemNotFoundError()
-    }
 
     await prismaClient.inventory.create({
       data: {
@@ -40,9 +33,9 @@ export const createInventory = async (req: Request, res: Response, next: NextFun
       },
     });
 
-    return res.json({ message: "Estoque cadastrado com sucesso." }).status(201);
+    return res.json({ message: "Estoque criado com sucesso." }).status(201);
   } catch (err) {
     next(err);
-    throw new InternalServerError()
+    throw new InternalServerError();
   }
 };

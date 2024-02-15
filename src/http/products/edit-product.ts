@@ -9,12 +9,11 @@ export const editProduct = async (req: Request, res: Response, next: NextFunctio
     const { id: userId } = req.params;
 
     const editProductBodySchema = z.object({
-      code: z.string(),
-      sigla: z.string(),
-      name: z.string(),
+      sigla: z.string().optional(),
+      name: z.string().optional(),
     });
 
-    const { code, sigla, name } = editProductBodySchema.parse(req.body);
+    const { sigla, name } = editProductBodySchema.parse(req.body);
 
     await prismaClient.product.update({
       where: {
@@ -23,7 +22,6 @@ export const editProduct = async (req: Request, res: Response, next: NextFunctio
       data: {
         ...(name && { name }),
         ...(sigla && { sigla }),
-        ...(code && { code }),
         updatedAt: new Date(),
       },
     });
