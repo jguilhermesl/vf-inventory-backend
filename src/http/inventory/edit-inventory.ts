@@ -10,10 +10,10 @@ export const editInventory = async (req: Request, res: Response) => {
       lot: z.string(),
       price: z.number(),
       quantity: z.number(),
-      validty: z.string(),
+      validity: z.string(),
     });
 
-    const { lot, price, quantity, validty } = createInventoryBodySchema.parse(
+    const { lot, price, quantity, validity } = createInventoryBodySchema.parse(
       req.body
     );
 
@@ -25,7 +25,7 @@ export const editInventory = async (req: Request, res: Response) => {
         ...(lot && { lot }),
         ...(price && { price }),
         ...(quantity && { quantity }),
-        ...(validty && { validty }),
+        ...(validity && { validity }),
         updatedAt: new Date(),
       },
     });

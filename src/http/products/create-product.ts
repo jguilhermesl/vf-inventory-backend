@@ -12,12 +12,11 @@ export const createProduct = async (
 ) => {
   try {
     const createProductBodySchema = z.object({
-      code: z.string(),
       sigla: z.string(),
       name: z.string(),
     });
 
-    const { code, sigla, name } = createProductBodySchema.parse(req.body);
+    const { sigla, name } = createProductBodySchema.parse(req.body);
 
     const existingProduct = await prismaClient.product.findUnique({
       where: { name, sigla },
@@ -27,6 +26,8 @@ export const createProduct = async (
       throw new ProductAlreadyExistsError();
     }
 
+    const code = name.slice(0, 3).toUpperCase() + name.slice(name.length - 3, name.length).toUpperCase()
+
     await prismaClient.product.create({
       data: { code, name, sigla },
     });
@@ -34,6 +35,7 @@ export const createProduct = async (
     return res
       .json({ message: "Produto cadastrado com sucesso." })
       .status(HttpsCode.Created);
+
   } catch (err) {
     next(err);
     throw new InternalServerError();
