@@ -23,7 +23,7 @@ router.post("/users/signin", login);
 router.post("/users", createUser);
 router.delete("/users/:id", isAuthenticated, deleteUser);
 router.put("/users/:id", isAuthenticated, editUser);
-router.get("/users/:id", isAuthenticated, getUserProfile);
+router.get("/me", isAuthenticated, getUserProfile);
 
 // Products
 router.post("/products", isAuthenticated, createProduct);

@@ -77,7 +77,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         refreshToken
       })
   } catch (err) {
-    next(err)
-    throw new InternalServerError();
+    const error = new InternalServerError();
+    return next(err ?? error)
   }
 }
