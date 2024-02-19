@@ -16,6 +16,7 @@ import { createInventory } from '@/http/inventory/create-inventory';
 import { getProduct } from "@/http/products/get-product";
 import { fetchProducts } from "@/http/products/fetch-products";
 import { fetchUsers } from '@/http/users/fetch-users';
+import { deleteInventory } from '@/http/inventory/delete-inventory';
 
 const router = Router();
 
@@ -39,5 +40,6 @@ router.post("/inventory", isAuthenticated, createInventory);
 router.put("/inventory/:id", isAuthenticated, editInventory);
 router.post("/inventory/action/:id", isAuthenticated, createActionInventory);
 router.get("/inventory", isAuthenticated, fetchInventory);
+router.delete("/inventory/:id", isAuthenticated, deleteInventory);
 
 export { router };

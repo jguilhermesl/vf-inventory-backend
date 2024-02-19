@@ -48,7 +48,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       '' + env.JWT_SECRET,
       {
         subject: user.id,
-        expiresIn: '1d',
+        expiresIn: '30d',
       }
     );
 

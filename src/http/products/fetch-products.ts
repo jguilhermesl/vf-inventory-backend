@@ -14,9 +14,18 @@ export const fetchProducts = async (req: Request, res: Response, next: NextFunct
             { name: { contains: search.toString(), mode: "insensitive" } },
             { code: { contains: search.toString(), mode: "insensitive" } },
             { sigla: { contains: search.toString(), mode: "insensitive" } },
-          ]
+          ],
         }
       }),
+      where: {
+        deletedAt: { equals: null }
+      },
+      select: {
+        id: true,
+        name: true,
+        code: true,
+        sigla: true
+      }
     });
 
     return res.json({ products }).status(HttpsCode.Success);

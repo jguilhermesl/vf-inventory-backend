@@ -25,7 +25,7 @@ export const editInventory = async (req: Request, res: Response) => {
         ...(lot && { lot }),
         ...(price && { price }),
         ...(quantity && { quantity }),
-        ...(validity && { validity }),
+        ...(validity && { validity: new Date(validity) }),
         updatedAt: new Date(),
       },
     });

@@ -25,7 +25,7 @@ export const editUser = async (req: Request, res: Response, next: NextFunction) 
         ...(name && { name }),
         ...(role && { role }),
         ...(email && { email }),
-        ...(password && { password: await hash(password, 6) }),
+        ...(password && { passwordHash: await hash(password, 6) }),
         updatedAt: new Date()
       }
     })

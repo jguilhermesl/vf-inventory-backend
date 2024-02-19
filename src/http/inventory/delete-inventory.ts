@@ -3,11 +3,11 @@ import { InternalServerError } from "@/errors/internal-server-error";
 import prismaClient from "@/services/prisma";
 import { NextFunction, Request, Response } from "express";
 
-export const deleteProduct = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteInventory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id: productId } = req.params;
 
-    await prismaClient.product.update({
+    await prismaClient.inventory.update({
       where: {
         id: productId,
       },
@@ -16,8 +16,9 @@ export const deleteProduct = async (req: Request, res: Response, next: NextFunct
       }
     });
 
-    return res.json({ message: "Produto deletado com sucesso." }).status(HttpsCode.Success);
+    return res.json({ message: "Estoque deletado com sucesso." }).status(HttpsCode.Success);
   } catch (err) {
+    console.log(err)
     next(err)
     throw new InternalServerError();
   }

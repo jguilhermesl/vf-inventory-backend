@@ -16,6 +16,16 @@ export const fetchUsers = async (req: Request, res: Response, next: NextFunction
           ]
         }
       }),
+      where: {
+        deletedAt: { equals: null }
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        passwordHash: false
+      }
     });
 
     return res.json({ users }).status(HttpsCode.Success);

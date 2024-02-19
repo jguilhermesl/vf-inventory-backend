@@ -7,7 +7,7 @@ export const fetchInventory = async (req: Request, res: Response, next: NextFunc
   try {
     const { search } = req.query;
 
-    const inventory = await prismaClient.inventory.findMany({
+    const data = await prismaClient.inventory.findMany({
       ...(search && {
         where: {
           OR: [
@@ -21,9 +21,12 @@ export const fetchInventory = async (req: Request, res: Response, next: NextFunc
               }
             },
             { lot: { contains: search.toString(), mode: "insensitive" } }
-          ]
+          ],
         }
       }),
+      where: {
+        deletedAt: { equals: null }
+      },
       select: {
         product: true,
         lot: true,
@@ -31,9 +34,21 @@ export const fetchInventory = async (req: Request, res: Response, next: NextFunc
         createdBy: true,
         quantity: true,
         validity: true,
-        id: true
-      }
+        id: true,
+        deletedAt: true
+      },
     });
+
+    const inventory = data.map((item) => {
+      return {
+        id: item.id,
+        lot: item.lot,
+        price: item.price,
+        quantity: item.quantity,
+        validity: item.validity,
+        productName: item.product.name
+      }
+    })
 
     return res.json({ inventory }).status(HttpsCode.Success);
   } catch (err) {
