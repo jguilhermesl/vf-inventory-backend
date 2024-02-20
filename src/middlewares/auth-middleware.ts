@@ -1,20 +1,24 @@
-import { env } from '@/env';
-import { NextFunction, Request, Response } from 'express';
-import { verify } from 'jsonwebtoken'
+import { env } from "@/env";
+import { NextFunction, Request, Response } from "express";
+import { verify } from "jsonwebtoken";
 
-export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+export function isAuthenticated(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   const authToken = req.headers.authorization;
   if (!authToken)
     return res.status(401).json({
-      error: "Unauthorized."
-    })
+      error: "Unauthorized.",
+    });
 
-  const [, token] = authToken.split(' ')
+  const [, token] = authToken.split(" ");
 
   verify(token, env.JWT_SECRET, (error, decoded) => {
-    if (error) return res.status(401).json({ error })
+    if (error) return res.status(401).json({ error });
 
-    req.userState = decoded as any
+    req.userState = decoded as any;
     return next();
-  })
+  });
 }

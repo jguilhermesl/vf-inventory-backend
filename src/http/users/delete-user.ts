@@ -1,18 +1,20 @@
+import { InternalServerError } from '@/errors/internal-server-error';
 import prismaClient from "@/services/prisma";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 
-export const deleteUser = async (req: Request, res: Response) => {
+export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id: userId } = req.params;
 
     await prismaClient.user.delete({
       where: {
-        id: userId
-      }
-    })
+        id: userId,
+      },
+    });
 
     return res.json({ message: "Usuário deletado com sucesso." }).status(201);
   } catch (err) {
-    return res.json({ message: "Algo aconteceu de errado." }).status(500)
+    next(err)
+    throw new InternalServerError();
   }
 };

@@ -1,11 +1,13 @@
 import { env } from '@/env';
+import { InternalServerError } from '@/errors/internal-server-error';
+import { InvalidCredentialsError } from '@/errors/invalid-credentials-error';
 import prismaClient from '@/services/prisma';
 import { compare } from 'bcryptjs';
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { sign } from 'jsonwebtoken';
 import { z } from 'zod';
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const loginBodySchema = z.object({
       email: z.string().email(),
@@ -28,13 +30,13 @@ export const login = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'Usuário/senha incorretos.' });
+      throw new InvalidCredentialsError()
     }
 
     const passwordMatch = await compare(password, user.passwordHash);
 
     if (!passwordMatch) {
-      return res.status(404).json({ error: 'Usuário/senha incorretos.' });
+      throw new InvalidCredentialsError()
     }
 
     const token = sign(
@@ -46,7 +48,7 @@ export const login = async (req: Request, res: Response) => {
       '' + env.JWT_SECRET,
       {
         subject: user.id,
-        expiresIn: '1d',
+        expiresIn: '30d',
       }
     );
 
@@ -75,8 +77,7 @@ export const login = async (req: Request, res: Response) => {
         refreshToken
       })
   } catch (err) {
-    return res.status(500).json({
-      message: "Algo aconteceu de errado."
-    })
+    const error = new InternalServerError();
+    return next(err ?? error)
   }
 }

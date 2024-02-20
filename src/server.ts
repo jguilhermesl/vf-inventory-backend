@@ -1,12 +1,18 @@
-import express from "express"
+import { errorMiddleware } from './middlewares/error-middleware';
+import express, { Request, Response } from "express";
 import { env } from "./env";
 import { corsMiddleware } from "./middlewares/cors-middleware";
 import { router } from "./routes/routes";
 
-const app = express()
+const app = express();
 
-app.use(express.json())
-app.use(corsMiddleware)
+app.use(express.json());
+app.use(corsMiddleware);
 
-app.use(router)
-app.listen(env.PORT, () => console.log(`Servidor rodando na porta ${env.PORT}!!!`));
+app.use(router);
+
+app.use(errorMiddleware);
+
+app.listen(env.PORT, () =>
+  console.log(`Servidor rodando na porta ${env.PORT}!!!`)
+);
