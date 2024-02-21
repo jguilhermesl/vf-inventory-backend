@@ -22,7 +22,7 @@ export const createInventory = async (
     const { lot, price, quantity, validity, productId } =
       createInventoryBodySchema.parse(req.body);
 
-    await prismaClient.inventory.create({
+    const inventory = await prismaClient.inventory.create({
       data: {
         lot,
         price,
@@ -30,6 +30,24 @@ export const createInventory = async (
         validity: new Date(validity),
         product: { connect: { id: productId } },
         createdBy: { connect: { id: userId } },
+      },
+    });
+
+    await prismaClient.history.create({
+      data: {
+        quantity,
+        type: "input",
+        customerName: "Entrada de Estoque",
+        createdBy: {
+          connect: {
+            id: userId
+          }
+        },
+        inventory: {
+          connect: {
+            id: inventory.id
+          }
+        }
       },
     });
 
