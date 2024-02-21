@@ -20,13 +20,12 @@ export const fetchInventory = async (req: Request, res: Response, next: NextFunc
                 ]
               }
             },
-            { lot: { contains: search.toString(), mode: "insensitive" } }
+            { lot: { contains: search.toString(), mode: "insensitive" } },
+
           ],
+          deletedAt: { equals: null }
         }
       }),
-      where: {
-        deletedAt: { equals: null }
-      },
       select: {
         product: true,
         lot: true,

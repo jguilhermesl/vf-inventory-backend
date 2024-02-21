@@ -13,12 +13,10 @@ export const fetchUsers = async (req: Request, res: Response, next: NextFunction
           OR: [
             { name: { contains: search.toString(), mode: "insensitive" } },
             { email: { contains: search.toString(), mode: "insensitive" } },
-          ]
+          ],
+          deletedAt: { equals: null }
         }
       }),
-      where: {
-        deletedAt: { equals: null }
-      },
       select: {
         id: true,
         email: true,

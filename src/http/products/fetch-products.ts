@@ -15,11 +15,9 @@ export const fetchProducts = async (req: Request, res: Response, next: NextFunct
             { code: { contains: search.toString(), mode: "insensitive" } },
             { sigla: { contains: search.toString(), mode: "insensitive" } },
           ],
+          deletedAt: { equals: null }
         }
       }),
-      where: {
-        deletedAt: { equals: null }
-      },
       select: {
         id: true,
         name: true,
