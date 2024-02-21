@@ -37,7 +37,6 @@ export const createInventory = async (
       data: {
         quantity,
         type: "input",
-        customerName: "Entrada de Estoque",
         createdBy: {
           connect: {
             id: userId
