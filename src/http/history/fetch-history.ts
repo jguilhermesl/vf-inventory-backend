@@ -52,14 +52,14 @@ export const fetchHistory = async (req: Request, res: Response, next: NextFuncti
 
     const history = data.map((item) => {
       return {
-        createdAt: item.createdAt,
-        type: item.type,
         inventoryLot: item.inventory.lot,
         inventoryProduct: item.inventory.product.name,
+        quantity: item.quantity,
+        type: item.type,
         customerName: item.customerName,
         customerPaymentType: item.customerPaymentType,
         createdBy: item.createdBy.name,
-        quantity: item.quantity,
+        createdAt: item.createdAt,
         id: item.id,
       }
     })
