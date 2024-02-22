@@ -22,6 +22,7 @@ __export(routes_exports, {
   router: () => router
 });
 module.exports = __toCommonJS(routes_exports);
+var import_express = require("express");
 
 // src/errors/internal-server-error.ts
 var InternalServerError = class extends Error {
@@ -38,10 +39,17 @@ var prisma_default = prismaClient;
 // src/http/inventory/fetch-inventory.ts
 var fetchInventory = async (req, res, next) => {
   try {
-    const { search } = req.query;
+    const itemsPerPage = 20;
+    const { search, page = 1 } = req.query;
+    const quantityItems = await prisma_default.inventory.count({
+      where: {
+        deletedAt: { equals: null }
+      }
+    });
     const data = await prisma_default.inventory.findMany({
-      ...search && {
-        where: {
+      where: {
+        deletedAt: { equals: null },
+        ...search && {
           OR: [
             {
               product: {
@@ -56,9 +64,8 @@ var fetchInventory = async (req, res, next) => {
           ]
         }
       },
-      where: {
-        deletedAt: { equals: null }
-      },
+      skip: itemsPerPage * (page - 1),
+      take: itemsPerPage,
       select: {
         product: true,
         lot: true,
@@ -80,15 +87,12 @@ var fetchInventory = async (req, res, next) => {
         productName: item.product.name
       };
     });
-    return res.json({ inventory }).status(200 /* Success */);
+    return res.json({ inventory, page, totalItems: quantityItems, totalPages: Math.floor(quantityItems / 20) }).status(200 /* Success */);
   } catch (err) {
     next(err);
     throw new InternalServerError();
   }
 };
-
-// src/routes/routes.ts
-var import_express = require("express");
 
 // src/http/inventory/action-inventoy.ts
 var import_zod = require("zod");
@@ -99,8 +103,8 @@ var createActionInventory = async (req, res, next) => {
     const createActionInventoryBodySchema = import_zod.z.object({
       type: import_zod.z.enum(["input", "output"]),
       quantity: import_zod.z.number(),
-      customerName: import_zod.z.string().optional(),
-      customerPaymentType: import_zod.z.enum(["pix", "cash", "credit-card", "deb"]).optional()
+      customerName: import_zod.z.string().optional().nullable(),
+      customerPaymentType: import_zod.z.enum(["pix", "cash", "credit-card", "deb"]).optional().nullable()
     });
     const {
       type,
@@ -398,7 +402,8 @@ var createProduct = async (req, res, next) => {
 var deleteProduct = async (req, res, next) => {
   try {
     const { id: productId } = req.params;
-    await prisma_default.product.update({
+    console.log("productId ==> ", productId);
+    await prisma_default.product.updateMany({
       where: {
         id: productId
       },
@@ -486,7 +491,7 @@ var createInventory = async (req, res, next) => {
       productId: import_zod9.z.string()
     });
     const { lot, price, quantity, validity, productId } = createInventoryBodySchema.parse(req.body);
-    await prisma_default.inventory.create({
+    const inventory = await prisma_default.inventory.create({
       data: {
         lot,
         price,
@@ -494,6 +499,22 @@ var createInventory = async (req, res, next) => {
         validity: new Date(validity),
         product: { connect: { id: productId } },
         createdBy: { connect: { id: userId } }
+      }
+    });
+    await prisma_default.history.create({
+      data: {
+        quantity,
+        type: "input",
+        createdBy: {
+          connect: {
+            id: userId
+          }
+        },
+        inventory: {
+          connect: {
+            id: inventory.id
+          }
+        }
       }
     });
     return res.json({ message: "Estoque criado com sucesso." }).status(201);
@@ -522,10 +543,17 @@ var getProduct = async (req, res, next) => {
 // src/http/products/fetch-products.ts
 var fetchProducts = async (req, res, next) => {
   try {
-    const { search } = req.query;
+    const itemsPerPage = 20;
+    const { search, page = 1 } = req.query;
+    const quantityItems = await prisma_default.inventory.count({
+      where: {
+        deletedAt: { equals: null }
+      }
+    });
     const products = await prisma_default.product.findMany({
-      ...search && {
-        where: {
+      where: {
+        deletedAt: { equals: null },
+        ...search && {
           OR: [
             { name: { contains: search.toString(), mode: "insensitive" } },
             { code: { contains: search.toString(), mode: "insensitive" } },
@@ -533,9 +561,8 @@ var fetchProducts = async (req, res, next) => {
           ]
         }
       },
-      where: {
-        deletedAt: { equals: null }
-      },
+      skip: itemsPerPage * (page - 1),
+      take: itemsPerPage,
       select: {
         id: true,
         name: true,
@@ -543,7 +570,7 @@ var fetchProducts = async (req, res, next) => {
         sigla: true
       }
     });
-    return res.json({ products }).status(200 /* Success */);
+    return res.json({ products, page, totalItems: quantityItems, totalPages: Math.floor(quantityItems / 20) }).status(200 /* Success */);
   } catch (err) {
     next(err);
     throw new InternalServerError();
@@ -553,19 +580,25 @@ var fetchProducts = async (req, res, next) => {
 // src/http/users/fetch-users.ts
 var fetchUsers = async (req, res, next) => {
   try {
-    const { search } = req.query;
+    const itemsPerPage = 20;
+    const { search, page = 1 } = req.query;
+    const quantityItems = await prisma_default.inventory.count({
+      where: {
+        deletedAt: { equals: null }
+      }
+    });
     const users = await prisma_default.user.findMany({
-      ...search && {
-        where: {
+      where: {
+        deletedAt: { equals: null },
+        ...search && {
           OR: [
             { name: { contains: search.toString(), mode: "insensitive" } },
             { email: { contains: search.toString(), mode: "insensitive" } }
           ]
         }
       },
-      where: {
-        deletedAt: { equals: null }
-      },
+      skip: itemsPerPage * (page - 1),
+      take: itemsPerPage,
       select: {
         id: true,
         email: true,
@@ -574,7 +607,7 @@ var fetchUsers = async (req, res, next) => {
         passwordHash: false
       }
     });
-    return res.json({ users }).status(200 /* Success */);
+    return res.json({ users, page, totalItems: quantityItems, totalPages: Math.floor(quantityItems / 20) }).status(200 /* Success */);
   } catch (err) {
     next(err);
     throw new InternalServerError();
@@ -584,10 +617,10 @@ var fetchUsers = async (req, res, next) => {
 // src/http/inventory/delete-inventory.ts
 var deleteInventory = async (req, res, next) => {
   try {
-    const { id: productId } = req.params;
-    await prisma_default.inventory.update({
+    const { id: inventoryId } = req.params;
+    await prisma_default.inventory.updateMany({
       where: {
-        id: productId
+        id: inventoryId
       },
       data: {
         deletedAt: /* @__PURE__ */ new Date()
@@ -596,6 +629,80 @@ var deleteInventory = async (req, res, next) => {
     return res.json({ message: "Estoque deletado com sucesso." }).status(200 /* Success */);
   } catch (err) {
     console.log(err);
+    next(err);
+    throw new InternalServerError();
+  }
+};
+
+// src/http/history/fetch-history.ts
+var fetchHistory = async (req, res, next) => {
+  try {
+    const itemsPerPage = 20;
+    const { search, page } = req.query;
+    const quantityItems = await prisma_default.inventory.count({
+      where: {
+        deletedAt: { equals: null }
+      }
+    });
+    const data = await prisma_default.history.findMany({
+      where: {
+        deletedAt: { equals: null },
+        ...search && {
+          OR: [
+            {
+              inventory: {
+                OR: [
+                  { lot: { contains: search.toString(), mode: "insensitive" } },
+                  { product: { name: { contains: search.toString(), mode: "insensitive" } } }
+                ]
+              }
+            },
+            { customerName: { contains: search.toString(), mode: "insensitive" } }
+          ]
+        }
+      },
+      skip: itemsPerPage * (page - 1),
+      take: itemsPerPage,
+      select: {
+        createdAt: true,
+        type: true,
+        inventory: {
+          select: {
+            lot: true,
+            product: {
+              select: {
+                name: true
+              }
+            }
+          }
+        },
+        customerName: true,
+        customerPaymentType: true,
+        createdBy: {
+          select: {
+            name: true
+          }
+        },
+        quantity: true,
+        id: true,
+        deletedAt: true
+      }
+    });
+    const history = data.map((item) => {
+      return {
+        inventoryLot: item.inventory.lot,
+        inventoryProduct: item.inventory.product.name,
+        quantity: item.quantity,
+        type: item.type,
+        customerName: item.customerName,
+        customerPaymentType: item.customerPaymentType,
+        createdBy: item.createdBy.name,
+        createdAt: item.createdAt,
+        id: item.id
+      };
+    });
+    return res.json({ history, page, totalItems: quantityItems, totalPages: Math.floor(quantityItems / 20) }).status(200 /* Success */);
+  } catch (err) {
     next(err);
     throw new InternalServerError();
   }
@@ -619,6 +726,7 @@ router.put("/inventory/:id", isAuthenticated, editInventory);
 router.post("/inventory/action/:id", isAuthenticated, createActionInventory);
 router.get("/inventory", isAuthenticated, fetchInventory);
 router.delete("/inventory/:id", isAuthenticated, deleteInventory);
+router.get("/history", isAuthenticated, fetchHistory);
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   router

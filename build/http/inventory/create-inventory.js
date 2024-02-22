@@ -48,7 +48,7 @@ var createInventory = async (req, res, next) => {
       productId: import_zod.z.string()
     });
     const { lot, price, quantity, validity, productId } = createInventoryBodySchema.parse(req.body);
-    await prisma_default.inventory.create({
+    const inventory = await prisma_default.inventory.create({
       data: {
         lot,
         price,
@@ -56,6 +56,22 @@ var createInventory = async (req, res, next) => {
         validity: new Date(validity),
         product: { connect: { id: productId } },
         createdBy: { connect: { id: userId } }
+      }
+    });
+    await prisma_default.history.create({
+      data: {
+        quantity,
+        type: "input",
+        createdBy: {
+          connect: {
+            id: userId
+          }
+        },
+        inventory: {
+          connect: {
+            id: inventory.id
+          }
+        }
       }
     });
     return res.json({ message: "Estoque criado com sucesso." }).status(201);

@@ -38,19 +38,25 @@ var prisma_default = prismaClient;
 // src/http/users/fetch-users.ts
 var fetchUsers = async (req, res, next) => {
   try {
-    const { search } = req.query;
+    const itemsPerPage = 20;
+    const { search, page = 1 } = req.query;
+    const quantityItems = await prisma_default.inventory.count({
+      where: {
+        deletedAt: { equals: null }
+      }
+    });
     const users = await prisma_default.user.findMany({
-      ...search && {
-        where: {
+      where: {
+        deletedAt: { equals: null },
+        ...search && {
           OR: [
             { name: { contains: search.toString(), mode: "insensitive" } },
             { email: { contains: search.toString(), mode: "insensitive" } }
           ]
         }
       },
-      where: {
-        deletedAt: { equals: null }
-      },
+      skip: itemsPerPage * (page - 1),
+      take: itemsPerPage,
       select: {
         id: true,
         email: true,
@@ -59,7 +65,7 @@ var fetchUsers = async (req, res, next) => {
         passwordHash: false
       }
     });
-    return res.json({ users }).status(200 /* Success */);
+    return res.json({ users, page, totalItems: quantityItems, totalPages: Math.floor(quantityItems / 20) }).status(200 /* Success */);
   } catch (err) {
     next(err);
     throw new InternalServerError();

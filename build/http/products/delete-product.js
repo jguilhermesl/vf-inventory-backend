@@ -39,7 +39,8 @@ var prisma_default = prismaClient;
 var deleteProduct = async (req, res, next) => {
   try {
     const { id: productId } = req.params;
-    await prisma_default.product.update({
+    console.log("productId ==> ", productId);
+    await prisma_default.product.updateMany({
       where: {
         id: productId
       },
