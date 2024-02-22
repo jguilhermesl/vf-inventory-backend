@@ -9,15 +9,13 @@ export const fetchUsers = async (req: Request, res: Response, next: NextFunction
 
     const users = await prismaClient.user.findMany({
       where: {
-        AND: [
-          { deletedAt: { equals: null } },
-          search && {
-            OR: [
-              { name: { contains: search.toString(), mode: "insensitive" } },
-              { email: { contains: search.toString(), mode: "insensitive" } },
-            ],
-          }
-        ]
+        deletedAt: { equals: null },
+        ...(search && {
+          OR: [
+            { name: { contains: search.toString(), mode: "insensitive" } },
+            { email: { contains: search.toString(), mode: "insensitive" } },
+          ],
+        })
       },
       select: {
         id: true,

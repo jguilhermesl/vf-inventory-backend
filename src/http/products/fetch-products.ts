@@ -9,16 +9,14 @@ export const fetchProducts = async (req: Request, res: Response, next: NextFunct
 
     const products = await prismaClient.product.findMany({
       where: {
-        AND: [
-          { deletedAt: { equals: null } },
-          search && {
-            OR: [
-              { name: { contains: search.toString(), mode: "insensitive" } },
-              { code: { contains: search.toString(), mode: "insensitive" } },
-              { sigla: { contains: search.toString(), mode: "insensitive" } },
-            ]
-          }
-        ]
+        deletedAt: { equals: null },
+        ...(search && {
+          OR: [
+            { name: { contains: search.toString(), mode: "insensitive" } },
+            { code: { contains: search.toString(), mode: "insensitive" } },
+            { sigla: { contains: search.toString(), mode: "insensitive" } },
+          ]
+        })
       },
       select: {
         id: true,
