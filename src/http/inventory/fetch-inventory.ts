@@ -1,3 +1,4 @@
+import { IFetchQueryProps } from "@/@types/fetchQueryProps";
 import { HttpsCode } from "@/constants/errors";
 import { InternalServerError } from "@/errors/internal-server-error";
 import prismaClient from "@/services/prisma";
@@ -5,7 +6,14 @@ import { NextFunction, Request, Response } from "express";
 
 export const fetchInventory = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { search } = req.query;
+    const itemsPerPage = 20
+    const { search, page = 1 } = req.query as IFetchQueryProps;
+
+    const quantityItems = await prismaClient.inventory.count({
+      where: {
+        deletedAt: { equals: null }
+      }
+    });
 
     const data = await prismaClient.inventory.findMany({
       where: {
@@ -25,6 +33,8 @@ export const fetchInventory = async (req: Request, res: Response, next: NextFunc
           ],
         })
       },
+      skip: itemsPerPage * (page - 1),
+      take: itemsPerPage,
       select: {
         product: true,
         lot: true,
@@ -48,7 +58,7 @@ export const fetchInventory = async (req: Request, res: Response, next: NextFunc
       }
     })
 
-    return res.json({ inventory }).status(HttpsCode.Success);
+    return res.json({ inventory, page, totalItems: quantityItems, totalPages: Math.floor(quantityItems / 20) }).status(HttpsCode.Success);
   } catch (err) {
     next(err)
     throw new InternalServerError();
