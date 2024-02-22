@@ -8,24 +8,25 @@ export const fetchInventory = async (req: Request, res: Response, next: NextFunc
     const { search } = req.query;
 
     const data = await prismaClient.inventory.findMany({
-      ...(search && {
-        where: {
-          OR: [
-            {
-              product: {
-                OR: [
-                  { name: { contains: search.toString(), mode: "insensitive" } },
-                  { sigla: { contains: search.toString(), mode: "insensitive" } },
-                  { code: { contains: search.toString(), mode: "insensitive" } },
-                ]
-              }
-            },
-            { lot: { contains: search.toString(), mode: "insensitive" } },
-
-          ],
-          deletedAt: { equals: null }
-        }
-      }),
+      where: {
+        AND: [
+          { deletedAt: { equals: null } },
+          search && {
+            OR: [
+              {
+                product: {
+                  OR: [
+                    { name: { contains: search.toString(), mode: "insensitive" } },
+                    { sigla: { contains: search.toString(), mode: "insensitive" } },
+                    { code: { contains: search.toString(), mode: "insensitive" } },
+                  ]
+                }
+              },
+              { lot: { contains: search.toString(), mode: "insensitive" } },
+            ],
+          }
+        ]
+      },
       select: {
         product: true,
         lot: true,

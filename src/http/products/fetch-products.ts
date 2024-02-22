@@ -8,16 +8,18 @@ export const fetchProducts = async (req: Request, res: Response, next: NextFunct
     const { search } = req.query;
 
     const products = await prismaClient.product.findMany({
-      ...(search && {
-        where: {
-          OR: [
-            { name: { contains: search.toString(), mode: "insensitive" } },
-            { code: { contains: search.toString(), mode: "insensitive" } },
-            { sigla: { contains: search.toString(), mode: "insensitive" } },
-          ],
-          deletedAt: { equals: null }
-        }
-      }),
+      where: {
+        AND: [
+          { deletedAt: { equals: null } },
+          search && {
+            OR: [
+              { name: { contains: search.toString(), mode: "insensitive" } },
+              { code: { contains: search.toString(), mode: "insensitive" } },
+              { sigla: { contains: search.toString(), mode: "insensitive" } },
+            ]
+          }
+        ]
+      },
       select: {
         id: true,
         name: true,

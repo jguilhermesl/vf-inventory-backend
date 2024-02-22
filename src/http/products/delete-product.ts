@@ -7,7 +7,9 @@ export const deleteProduct = async (req: Request, res: Response, next: NextFunct
   try {
     const { id: productId } = req.params;
 
-    await prismaClient.product.update({
+    console.log("productId ==> ", productId)
+
+    await prismaClient.product.updateMany({
       where: {
         id: productId,
       },

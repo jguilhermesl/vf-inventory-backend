@@ -8,22 +8,24 @@ export const fetchHistory = async (req: Request, res: Response, next: NextFuncti
     const { search } = req.query;
 
     const data = await prismaClient.history.findMany({
-      ...(search && {
-        where: {
-          OR: [
-            {
-              inventory: {
-                OR: [
-                  { lot: { contains: search.toString(), mode: "insensitive" } },
-                  { product: { name: { contains: search.toString(), mode: "insensitive" } } }
-                ]
+      where: {
+        AND: [
+          { deletedAt: { equals: null } },
+          search && {
+            OR: [
+              {
+                inventory: {
+                  OR: [
+                    { lot: { contains: search.toString(), mode: "insensitive" } },
+                    { product: { name: { contains: search.toString(), mode: "insensitive" } } }
+                  ]
+                },
               },
-            },
-            { customerName: { contains: search.toString(), mode: "insensitive" } }
-          ],
-          deletedAt: { equals: null }
-        }
-      }),
+              { customerName: { contains: search.toString(), mode: "insensitive" } }
+            ],
+          }
+        ]
+      },
       select: {
         createdAt: true,
         type: true,

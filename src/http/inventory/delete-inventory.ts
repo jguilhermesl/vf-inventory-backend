@@ -5,11 +5,11 @@ import { NextFunction, Request, Response } from "express";
 
 export const deleteInventory = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id: productId } = req.params;
+    const { id: inventoryId } = req.params;
 
-    await prismaClient.inventory.update({
+    await prismaClient.inventory.updateMany({
       where: {
-        id: productId,
+        id: inventoryId,
       },
       data: {
         deletedAt: new Date()
