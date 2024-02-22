@@ -7,9 +7,9 @@ import { NextFunction, Request, Response } from "express";
 export const fetchHistory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const itemsPerPage = 20;
-    const { search, page } = req.query as IFetchQueryProps;
+    const { search, page = 1 } = req.query as IFetchQueryProps;
 
-    const quantityItems = await prismaClient.inventory.count({
+    const quantityItems = await prismaClient.history.count({
       where: {
         deletedAt: { equals: null }
       }
@@ -76,6 +76,7 @@ export const fetchHistory = async (req: Request, res: Response, next: NextFuncti
 
     return res.json({ history, page, totalItems: quantityItems, totalPages: Math.floor(quantityItems / 20) }).status(HttpsCode.Success);
   } catch (err) {
+    console.log(err)
     next(err)
     throw new InternalServerError();
   }

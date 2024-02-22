@@ -9,7 +9,7 @@ export const fetchUsers = async (req: Request, res: Response, next: NextFunction
     const itemsPerPage = 20
     const { search, page = 1 } = req.query as IFetchQueryProps;
 
-    const quantityItems = await prismaClient.inventory.count({
+    const quantityItems = await prismaClient.user.count({
       where: {
         deletedAt: { equals: null }
       }
