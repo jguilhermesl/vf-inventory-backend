@@ -36,7 +36,7 @@ export const fetchProducts = async (req: Request, res: Response, next: NextFunct
       }
     });
 
-    return res.json({ products, page, totalItems: quantityItems, totalPages: Math.floor(quantityItems / 20) }).status(HttpsCode.Success);
+    return res.json({ products, page, totalItems: quantityItems, totalPages: Math.ceil(quantityItems / 20) }).status(HttpsCode.Success);
   } catch (err) {
     next(err)
     throw new InternalServerError();
