@@ -56,7 +56,8 @@ export const fetchHistory = async (req: Request, res: Response, next: NextFuncti
         },
         quantity: true,
         id: true,
-        deletedAt: true
+        deletedAt: true,
+        price: true
       },
     });
 
@@ -71,6 +72,7 @@ export const fetchHistory = async (req: Request, res: Response, next: NextFuncti
         createdBy: item.createdBy.name,
         createdAt: item.createdAt,
         id: item.id,
+        price: item.price
       }
     })
 

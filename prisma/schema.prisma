@@ -64,6 +64,7 @@ model History {
   type                String
   customerName        String?
   customerPaymentType String?
+  price               Float?
   quantity            Int
   deletedAt           DateTime?
 
