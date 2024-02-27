@@ -48,6 +48,20 @@ export const createActionInventory = async (
       },
     });
 
+    const inventory = await prismaClient.inventory.findUnique({
+      where: {
+        id: inventoryId
+      }
+    })
+
+    if (type === "output") {
+      const finalValue = inventory.quantity - quantity
+
+      if (finalValue < 0) {
+        return res.status(HttpsCode.Conflict).send({ error: "Estoque não pode ficar negativo." })
+      }
+    }
+
     const updateData = {
       ...(type === "input"
         ? { quantity: { increment: quantity } }
