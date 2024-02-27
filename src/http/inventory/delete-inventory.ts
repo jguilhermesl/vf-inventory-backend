@@ -18,6 +18,6 @@ export const deleteInventory = async (req: Request, res: Response, next: NextFun
 
     return res.json({ message: "Estoque deletado com sucesso." }).status(HttpsCode.Success);
   } catch (err) {
-    return res.json({ error: "Algo aconteceu de errado", message: err }).status(500)
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err })
   }
 };

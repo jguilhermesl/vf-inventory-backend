@@ -78,6 +78,6 @@ export const fetchHistory = async (req: Request, res: Response, next: NextFuncti
 
     return res.json({ history, page, totalItems: quantityItems, totalPages: Math.ceil(quantityItems / 20) }).status(HttpsCode.Success);
   } catch (err) {
-    return res.json({ error: "Algo aconteceu de errado", message: err }).status(500)
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err })
   }
 };

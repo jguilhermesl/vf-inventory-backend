@@ -14,6 +14,6 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
 
     return res.json({ message: "Usuário deletado com sucesso." }).status(201);
   } catch (err) {
-    return res.json({ error: "Algo aconteceu de errado", message: err }).status(500)
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err })
   }
 };

@@ -68,6 +68,6 @@ export const createActionInventory = async (
       .status(HttpsCode.Created)
       .json({ message: "Ação enviada com sucesso e estoque atualizado." });
   } catch (err) {
-    return res.json({ error: "Algo aconteceu de errado", message: err }).status(500)
+    return res.status(500).send({ error: "Algo aconteceu de errado.", message: err })
   }
 };

@@ -51,6 +51,6 @@ export const createInventory = async (
 
     return res.json({ message: "Estoque criado com sucesso." }).status(201);
   } catch (err) {
-    return res.json({ error: err }).status(500)
+    return res.status(500).send({ error: err })
   }
 };
