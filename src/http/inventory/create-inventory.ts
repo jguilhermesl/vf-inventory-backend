@@ -1,4 +1,3 @@
-import { InternalServerError } from "@/errors/internal-server-error";
 import prismaClient from "@/services/prisma";
 import { NextFunction, Request, Response } from "express";
 import { z } from "zod";
@@ -52,7 +51,6 @@ export const createInventory = async (
 
     return res.json({ message: "Estoque criado com sucesso." }).status(201);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.json({ error: err }).status(500)
   }
 };

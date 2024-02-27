@@ -20,7 +20,6 @@ export const deleteProduct = async (req: Request, res: Response, next: NextFunct
 
     return res.json({ message: "Produto deletado com sucesso." }).status(HttpsCode.Success);
   } catch (err) {
-    next(err)
-    throw new InternalServerError();
+    return res.json({ error: "Algo aconteceu de errado", message: err }).status(500)
   }
 };

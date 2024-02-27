@@ -1,6 +1,5 @@
 import { IFetchQueryProps } from "@/@types/fetchQueryProps";
 import { HttpsCode } from "@/constants/errors";
-import { InternalServerError } from "@/errors/internal-server-error";
 import prismaClient from "@/services/prisma";
 import { NextFunction, Request, Response } from "express";
 
@@ -60,7 +59,6 @@ export const fetchInventory = async (req: Request, res: Response, next: NextFunc
 
     return res.json({ inventory, page, totalItems: quantityItems, totalPages: Math.ceil(quantityItems / 20) }).status(HttpsCode.Success);
   } catch (err) {
-    next(err)
-    throw new InternalServerError();
+    return res.json({ error: "Algo aconteceu de errado", message: err }).status(500)
   }
 };

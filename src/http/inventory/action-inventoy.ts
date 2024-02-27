@@ -1,5 +1,4 @@
 import { HttpsCode } from "@/constants/errors";
-import { InternalServerError } from "@/errors/internal-server-error";
 import prismaClient from "@/services/prisma";
 import { NextFunction, Request, Response } from "express";
 import { z } from "zod";
@@ -69,7 +68,6 @@ export const createActionInventory = async (
       .status(HttpsCode.Created)
       .json({ message: "Ação enviada com sucesso e estoque atualizado." });
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.json({ error: "Algo aconteceu de errado", message: err }).status(500)
   }
 };

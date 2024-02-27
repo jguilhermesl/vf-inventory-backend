@@ -32,7 +32,6 @@ export const editUser = async (req: Request, res: Response, next: NextFunction) 
 
     return res.json({ message: "Usuário editado com sucesso." }).status(201);
   } catch (err) {
-    next(err)
-    throw new InternalServerError();
+    return res.json({ error: "Algo aconteceu de errado", message: err }).status(500)
   }
 };

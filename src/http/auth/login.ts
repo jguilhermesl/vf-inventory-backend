@@ -1,3 +1,4 @@
+import { HttpsCode } from '@/constants/errors';
 import { env } from '@/env';
 import { InternalServerError } from '@/errors/internal-server-error';
 import { InvalidCredentialsError } from '@/errors/invalid-credentials-error';
@@ -30,13 +31,13 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     });
 
     if (!user) {
-      throw new InvalidCredentialsError()
+      return res.json({ error: "Credenciais inválidas." }).status(HttpsCode.Unauthorized)
     }
 
     const passwordMatch = await compare(password, user.passwordHash);
 
     if (!passwordMatch) {
-      throw new InvalidCredentialsError()
+      return res.json({ error: "Credenciais inválidas." }).status(HttpsCode.Unauthorized)
     }
 
     const token = sign(
@@ -77,7 +78,6 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         refreshToken
       })
   } catch (err) {
-    const error = new InternalServerError();
-    return next(err ?? error)
+    return res.json({ error: "Algo aconteceu de errado", message: err }).status(500)
   }
 }

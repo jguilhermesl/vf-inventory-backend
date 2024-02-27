@@ -23,7 +23,7 @@ export const createProduct = async (
     });
 
     if (existingProduct) {
-      throw new ProductAlreadyExistsError();
+      return res.json({ error: "Produto já existente." }).status(HttpsCode.Conflict)
     }
 
     const code = name.slice(0, 3).toUpperCase() + name.slice(name.length - 3, name.length).toUpperCase()
@@ -37,7 +37,6 @@ export const createProduct = async (
       .status(HttpsCode.Created);
 
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.json({ error: "Algo aconteceu de errado", message: err }).status(500)
   }
 };

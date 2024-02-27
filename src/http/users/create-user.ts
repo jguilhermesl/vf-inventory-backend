@@ -1,3 +1,4 @@
+import { HttpsCode } from './../../constants/errors';
 import prismaClient from "@/services/prisma";
 import { NextFunction, Request, Response } from "express";
 import { z } from "zod";
@@ -29,7 +30,7 @@ export const createUser = async (
     });
 
     if (user) {
-      throw new EmailAlreadyExistsError();
+      return res.json({ error: "Email já existente." }).status(HttpsCode.Conflict)
     }
 
     await prismaClient.user.create({
@@ -43,7 +44,6 @@ export const createUser = async (
 
     return res.json({ message: "Usuário criado com sucesso." }).status(201);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.json({ error: "Algo aconteceu de errado", message: err }).status(500)
   }
 };

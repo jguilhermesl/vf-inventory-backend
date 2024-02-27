@@ -38,7 +38,6 @@ export const fetchUsers = async (req: Request, res: Response, next: NextFunction
 
     return res.json({ users, page, totalItems: quantityItems, totalPages: Math.ceil(quantityItems / 20) }).status(HttpsCode.Success);
   } catch (err) {
-    next(err)
-    throw new InternalServerError();
+    return res.json({ error: "Algo aconteceu de errado", message: err }).status(500)
   }
 };
