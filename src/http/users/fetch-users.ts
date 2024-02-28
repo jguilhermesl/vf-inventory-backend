@@ -36,7 +36,10 @@ export const fetchUsers = async (req: Request, res: Response, next: NextFunction
       }
     });
 
-    return res.json({ users, page, totalItems: quantityItems, totalPages: Math.ceil(quantityItems / 20) }).status(HttpsCode.Success);
+    const totalItemsPerPageSize = quantityItems / 20
+    const totalPages = totalItemsPerPageSize < 1 ? 1 : Math.ceil(totalItemsPerPageSize);
+
+    return res.json({ users, page, totalItems: quantityItems, totalPages }).status(HttpsCode.Success);
   } catch (err) {
     return res.status(500).send({ error: "Algo aconteceu de errado", message: err })
   }
