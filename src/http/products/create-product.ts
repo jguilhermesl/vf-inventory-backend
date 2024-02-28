@@ -2,6 +2,7 @@ import { HttpsCode } from "@/constants/errors";
 import { InternalServerError } from "@/errors/internal-server-error";
 import { ProductAlreadyExistsError } from "@/errors/product-already-exists-error";
 import prismaClient from "@/services/prisma";
+import { generateProductCode } from "@/utils/generateProductCode";
 import { NextFunction, Request, Response } from "express";
 import { z } from "zod";
 
@@ -26,7 +27,7 @@ export const createProduct = async (
       return res.json({ error: "Produto já existente." }).status(HttpsCode.Conflict)
     }
 
-    const code = name.slice(0, 3).toUpperCase() + name.slice(name.length - 3, name.length).toUpperCase()
+    const code = generateProductCode(name)
 
     await prismaClient.product.create({
       data: { code, name, sigla },
@@ -37,6 +38,7 @@ export const createProduct = async (
       .status(HttpsCode.Created);
 
   } catch (err) {
+    console.log(err)
     return res.status(500).send({ error: "Algo aconteceu de errado", message: err })
   }
 };
