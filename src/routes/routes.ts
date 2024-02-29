@@ -1,6 +1,6 @@
-import { fetchInventory } from './../http/inventory/fetch-inventory';
 import { Router } from "express";
 
+import { fetchInventory } from '@/http/inventory/fetch-inventory';
 import { createActionInventory } from '@/http/inventory/action-inventoy';
 import { login } from "@/http/auth/login";
 import { createUser } from "@/http/users/create-user";
@@ -17,6 +17,7 @@ import { getProduct } from "@/http/products/get-product";
 import { fetchProducts } from "@/http/products/fetch-products";
 import { fetchUsers } from '@/http/users/fetch-users';
 import { deleteInventory } from '@/http/inventory/delete-inventory';
+import { fetchHistory } from '@/http/history/fetch-history';
 
 const router = Router();
 
@@ -41,5 +42,8 @@ router.put("/inventory/:id", isAuthenticated, editInventory);
 router.post("/inventory/action/:id", isAuthenticated, createActionInventory);
 router.get("/inventory", isAuthenticated, fetchInventory);
 router.delete("/inventory/:id", isAuthenticated, deleteInventory);
+
+// History
+router.get("/history", isAuthenticated, fetchHistory)
 
 export { router };

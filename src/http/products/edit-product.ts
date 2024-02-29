@@ -28,7 +28,6 @@ export const editProduct = async (req: Request, res: Response, next: NextFunctio
 
     return res.json({ message: "Produto editado com sucesso." }).status(HttpsCode.Success);
   } catch (err) {
-    next(err)
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err })
   }
 };

@@ -15,7 +15,6 @@ export const getProduct = async (req: Request, res: Response, next: NextFunction
 
     return res.json({ user }).status(HttpsCode.Success);
   } catch (err) {
-    next(err)
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err })
   }
 };

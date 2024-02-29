@@ -1,4 +1,3 @@
-import { InternalServerError } from "@/errors/internal-server-error";
 import prismaClient from "@/services/prisma";
 import { NextFunction, Request, Response } from "express";
 import { z } from "zod";
@@ -22,7 +21,7 @@ export const createInventory = async (
     const { lot, price, quantity, validity, productId } =
       createInventoryBodySchema.parse(req.body);
 
-    await prismaClient.inventory.create({
+    const inventory = await prismaClient.inventory.create({
       data: {
         lot,
         price,
@@ -33,9 +32,25 @@ export const createInventory = async (
       },
     });
 
+    await prismaClient.history.create({
+      data: {
+        quantity,
+        type: "input",
+        createdBy: {
+          connect: {
+            id: userId
+          }
+        },
+        inventory: {
+          connect: {
+            id: inventory.id
+          }
+        }
+      },
+    });
+
     return res.json({ message: "Estoque criado com sucesso." }).status(201);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: err })
   }
 };

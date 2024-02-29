@@ -14,7 +14,6 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
 
     return res.json({ message: "Usuário deletado com sucesso." }).status(201);
   } catch (err) {
-    next(err)
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err })
   }
 };

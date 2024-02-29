@@ -38,10 +38,10 @@ var prisma_default = prismaClient;
 // src/http/inventory/delete-inventory.ts
 var deleteInventory = async (req, res, next) => {
   try {
-    const { id: productId } = req.params;
-    await prisma_default.inventory.update({
+    const { id: inventoryId } = req.params;
+    await prisma_default.inventory.updateMany({
       where: {
-        id: productId
+        id: inventoryId
       },
       data: {
         deletedAt: /* @__PURE__ */ new Date()

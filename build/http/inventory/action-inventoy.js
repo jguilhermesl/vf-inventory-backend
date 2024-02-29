@@ -44,8 +44,8 @@ var createActionInventory = async (req, res, next) => {
     const createActionInventoryBodySchema = import_zod.z.object({
       type: import_zod.z.enum(["input", "output"]),
       quantity: import_zod.z.number(),
-      customerName: import_zod.z.string().optional(),
-      customerPaymentType: import_zod.z.enum(["pix", "cash", "credit-card", "deb"]).optional()
+      customerName: import_zod.z.string().optional().nullable(),
+      customerPaymentType: import_zod.z.enum(["pix", "cash", "credit-card", "deb"]).optional().nullable()
     });
     const {
       type,

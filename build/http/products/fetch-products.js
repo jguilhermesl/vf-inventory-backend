@@ -38,10 +38,17 @@ var prisma_default = prismaClient;
 // src/http/products/fetch-products.ts
 var fetchProducts = async (req, res, next) => {
   try {
-    const { search } = req.query;
+    const itemsPerPage = 20;
+    const { search, page = 1 } = req.query;
+    const quantityItems = await prisma_default.inventory.count({
+      where: {
+        deletedAt: { equals: null }
+      }
+    });
     const products = await prisma_default.product.findMany({
-      ...search && {
-        where: {
+      where: {
+        deletedAt: { equals: null },
+        ...search && {
           OR: [
             { name: { contains: search.toString(), mode: "insensitive" } },
             { code: { contains: search.toString(), mode: "insensitive" } },
@@ -49,9 +56,8 @@ var fetchProducts = async (req, res, next) => {
           ]
         }
       },
-      where: {
-        deletedAt: { equals: null }
-      },
+      skip: itemsPerPage * (page - 1),
+      take: itemsPerPage,
       select: {
         id: true,
         name: true,
@@ -59,7 +65,7 @@ var fetchProducts = async (req, res, next) => {
         sigla: true
       }
     });
-    return res.json({ products }).status(200 /* Success */);
+    return res.json({ products, page, totalItems: quantityItems, totalPages: Math.floor(quantityItems / 20) }).status(200 /* Success */);
   } catch (err) {
     next(err);
     throw new InternalServerError();

@@ -5,11 +5,11 @@ import { NextFunction, Request, Response } from "express";
 
 export const deleteInventory = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id: productId } = req.params;
+    const { id: inventoryId } = req.params;
 
-    await prismaClient.inventory.update({
+    await prismaClient.inventory.updateMany({
       where: {
-        id: productId,
+        id: inventoryId,
       },
       data: {
         deletedAt: new Date()
@@ -18,8 +18,6 @@ export const deleteInventory = async (req: Request, res: Response, next: NextFun
 
     return res.json({ message: "Estoque deletado com sucesso." }).status(HttpsCode.Success);
   } catch (err) {
-    console.log(err)
-    next(err)
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err })
   }
 };

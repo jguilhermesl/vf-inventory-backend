@@ -14,7 +14,6 @@ export const getUserProfile = async (req: Request, res: Response, next: NextFunc
 
     return res.json({ user }).status(201);
   } catch (err) {
-    next(err)
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err })
   }
 };

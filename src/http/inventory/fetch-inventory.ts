@@ -1,15 +1,23 @@
+import { IFetchQueryProps } from "@/@types/fetchQueryProps";
 import { HttpsCode } from "@/constants/errors";
-import { InternalServerError } from "@/errors/internal-server-error";
 import prismaClient from "@/services/prisma";
 import { NextFunction, Request, Response } from "express";
 
 export const fetchInventory = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { search } = req.query;
+    const itemsPerPage = 20
+    const { search, page = 1 } = req.query as IFetchQueryProps;
+
+    const quantityItems = await prismaClient.inventory.count({
+      where: {
+        deletedAt: { equals: null }
+      }
+    });
 
     const data = await prismaClient.inventory.findMany({
-      ...(search && {
-        where: {
+      where: {
+        deletedAt: { equals: null },
+        ...(search && {
           OR: [
             {
               product: {
@@ -20,13 +28,12 @@ export const fetchInventory = async (req: Request, res: Response, next: NextFunc
                 ]
               }
             },
-            { lot: { contains: search.toString(), mode: "insensitive" } }
+            { lot: { contains: search.toString(), mode: "insensitive" } },
           ],
-        }
-      }),
-      where: {
-        deletedAt: { equals: null }
+        })
       },
+      skip: itemsPerPage * (page - 1),
+      take: itemsPerPage,
       select: {
         product: true,
         lot: true,
@@ -50,9 +57,11 @@ export const fetchInventory = async (req: Request, res: Response, next: NextFunc
       }
     })
 
-    return res.json({ inventory }).status(HttpsCode.Success);
+    const totalItemsPerPageSize = quantityItems / 20
+    const totalPages = totalItemsPerPageSize < 1 ? 1 : Math.ceil(totalItemsPerPageSize);
+
+    return res.json({ inventory, page, totalItems: quantityItems, totalPages }).status(HttpsCode.Success);
   } catch (err) {
-    next(err)
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err })
   }
 };

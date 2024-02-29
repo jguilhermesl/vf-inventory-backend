@@ -1,5 +1,4 @@
 import { HttpsCode } from "@/constants/errors";
-import { InternalServerError } from "@/errors/internal-server-error";
 import prismaClient from "@/services/prisma";
 import { NextFunction, Request, Response } from "express";
 import { z } from "zod";
@@ -16,13 +15,15 @@ export const createActionInventory = async (
     const createActionInventoryBodySchema = z.object({
       type: z.enum(["input", "output"]),
       quantity: z.number(),
-      customerName: z.string().optional(),
-      customerPaymentType: z.enum(["pix", "cash", "credit-card", "deb"]).optional(),
+      price: z.number().nullable().optional(),
+      customerName: z.string().optional().nullable(),
+      customerPaymentType: z.enum(["pix", "cash", "credit-card", "deb"]).optional().nullable(),
     });
 
     const {
       type,
       quantity,
+      price,
       customerName,
       customerPaymentType,
     } = createActionInventoryBodySchema.parse(req.body);
@@ -36,6 +37,7 @@ export const createActionInventory = async (
           },
         },
         quantity,
+        price,
         customerName,
         customerPaymentType,
         createdBy: {
@@ -45,6 +47,20 @@ export const createActionInventory = async (
         }
       },
     });
+
+    const inventory = await prismaClient.inventory.findUnique({
+      where: {
+        id: inventoryId
+      }
+    })
+
+    if (type === "output") {
+      const finalValue = inventory.quantity - quantity
+
+      if (finalValue < 0) {
+        return res.status(HttpsCode.Conflict).send({ error: "Estoque não pode ficar negativo." })
+      }
+    }
 
     const updateData = {
       ...(type === "input"
@@ -66,7 +82,6 @@ export const createActionInventory = async (
       .status(HttpsCode.Created)
       .json({ message: "Ação enviada com sucesso e estoque atualizado." });
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado.", message: err })
   }
 };

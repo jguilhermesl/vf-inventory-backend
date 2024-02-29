@@ -32,7 +32,6 @@ export const editInventory = async (req: Request, res: Response) => {
 
     return res.json({ message: "Estoque editado com sucesso." }).status(201);
   } catch (err) {
-    console.log(err);
-    return res.json({ message: "Algo aconteceu de errado." }).status(500);
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err })
   }
 };

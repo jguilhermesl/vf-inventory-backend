@@ -16,12 +16,12 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// src/http/inventory/fetch-inventory.ts
-var fetch_inventory_exports = {};
-__export(fetch_inventory_exports, {
-  fetchInventory: () => fetchInventory
+// src/http/history/fetch-history.ts
+var fetch_history_exports = {};
+__export(fetch_history_exports, {
+  fetchHistory: () => fetchHistory
 });
-module.exports = __toCommonJS(fetch_inventory_exports);
+module.exports = __toCommonJS(fetch_history_exports);
 
 // src/errors/internal-server-error.ts
 var InternalServerError = class extends Error {
@@ -35,58 +35,74 @@ var import_client = require("@prisma/client");
 var prismaClient = new import_client.PrismaClient();
 var prisma_default = prismaClient;
 
-// src/http/inventory/fetch-inventory.ts
-var fetchInventory = async (req, res, next) => {
+// src/http/history/fetch-history.ts
+var fetchHistory = async (req, res, next) => {
   try {
     const itemsPerPage = 20;
-    const { search, page = 1 } = req.query;
+    const { search, page } = req.query;
     const quantityItems = await prisma_default.inventory.count({
       where: {
         deletedAt: { equals: null }
       }
     });
-    const data = await prisma_default.inventory.findMany({
+    const data = await prisma_default.history.findMany({
       where: {
         deletedAt: { equals: null },
         ...search && {
           OR: [
             {
-              product: {
+              inventory: {
                 OR: [
-                  { name: { contains: search.toString(), mode: "insensitive" } },
-                  { sigla: { contains: search.toString(), mode: "insensitive" } },
-                  { code: { contains: search.toString(), mode: "insensitive" } }
+                  { lot: { contains: search.toString(), mode: "insensitive" } },
+                  { product: { name: { contains: search.toString(), mode: "insensitive" } } }
                 ]
               }
             },
-            { lot: { contains: search.toString(), mode: "insensitive" } }
+            { customerName: { contains: search.toString(), mode: "insensitive" } }
           ]
         }
       },
       skip: itemsPerPage * (page - 1),
       take: itemsPerPage,
       select: {
-        product: true,
-        lot: true,
-        price: true,
-        createdBy: true,
+        createdAt: true,
+        type: true,
+        inventory: {
+          select: {
+            lot: true,
+            product: {
+              select: {
+                name: true
+              }
+            }
+          }
+        },
+        customerName: true,
+        customerPaymentType: true,
+        createdBy: {
+          select: {
+            name: true
+          }
+        },
         quantity: true,
-        validity: true,
         id: true,
         deletedAt: true
       }
     });
-    const inventory = data.map((item) => {
+    const history = data.map((item) => {
       return {
-        id: item.id,
-        lot: item.lot,
-        price: item.price,
+        inventoryLot: item.inventory.lot,
+        inventoryProduct: item.inventory.product.name,
         quantity: item.quantity,
-        validity: item.validity,
-        productName: item.product.name
+        type: item.type,
+        customerName: item.customerName,
+        customerPaymentType: item.customerPaymentType,
+        createdBy: item.createdBy.name,
+        createdAt: item.createdAt,
+        id: item.id
       };
     });
-    return res.json({ inventory, page, totalItems: quantityItems, totalPages: Math.floor(quantityItems / 20) }).status(200 /* Success */);
+    return res.json({ history, page, totalItems: quantityItems, totalPages: Math.floor(quantityItems / 20) }).status(200 /* Success */);
   } catch (err) {
     next(err);
     throw new InternalServerError();
@@ -94,5 +110,5 @@ var fetchInventory = async (req, res, next) => {
 };
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
-  fetchInventory
+  fetchHistory
 });
