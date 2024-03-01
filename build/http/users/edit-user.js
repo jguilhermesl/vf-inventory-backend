@@ -31,15 +31,6 @@ var prisma_default = prismaClient;
 // src/http/users/edit-user.ts
 var import_zod = require("zod");
 var import_bcryptjs = require("bcryptjs");
-
-// src/errors/internal-server-error.ts
-var InternalServerError = class extends Error {
-  constructor() {
-    super("Internal server error.");
-  }
-};
-
-// src/http/users/edit-user.ts
 var editUser = async (req, res, next) => {
   try {
     const { id: userId } = req.params;
@@ -64,8 +55,7 @@ var editUser = async (req, res, next) => {
     });
     return res.json({ message: "Usu\xE1rio editado com sucesso." }).status(201);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 // Annotate the CommonJS export names for ESM import in node:

@@ -38,20 +38,6 @@ if (_env.success === false) {
 }
 var env = _env.data;
 
-// src/errors/internal-server-error.ts
-var InternalServerError = class extends Error {
-  constructor() {
-    super("Internal server error.");
-  }
-};
-
-// src/errors/invalid-credentials-error.ts
-var InvalidCredentialsError = class extends Error {
-  constructor() {
-    super("Invalid credentials.");
-  }
-};
-
 // src/services/prisma.ts
 var import_client = require("@prisma/client");
 var prismaClient = new import_client.PrismaClient();
@@ -81,11 +67,11 @@ var login = async (req, res, next) => {
       }
     });
     if (!user) {
-      throw new InvalidCredentialsError();
+      return res.json({ error: "Credenciais inv\xE1lidas." }).status(401 /* Unauthorized */);
     }
     const passwordMatch = await (0, import_bcryptjs.compare)(password, user.passwordHash);
     if (!passwordMatch) {
-      throw new InvalidCredentialsError();
+      return res.json({ error: "Credenciais inv\xE1lidas." }).status(401 /* Unauthorized */);
     }
     const token = (0, import_jsonwebtoken.sign)(
       {
@@ -121,8 +107,7 @@ var login = async (req, res, next) => {
       refreshToken
     });
   } catch (err) {
-    const error = new InternalServerError();
-    return next(err != null ? err : error);
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 // Annotate the CommonJS export names for ESM import in node:

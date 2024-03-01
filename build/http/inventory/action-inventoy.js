@@ -23,13 +23,6 @@ __export(action_inventoy_exports, {
 });
 module.exports = __toCommonJS(action_inventoy_exports);
 
-// src/errors/internal-server-error.ts
-var InternalServerError = class extends Error {
-  constructor() {
-    super("Internal server error.");
-  }
-};
-
 // src/services/prisma.ts
 var import_client = require("@prisma/client");
 var prismaClient = new import_client.PrismaClient();
@@ -44,12 +37,14 @@ var createActionInventory = async (req, res, next) => {
     const createActionInventoryBodySchema = import_zod.z.object({
       type: import_zod.z.enum(["input", "output"]),
       quantity: import_zod.z.number(),
+      price: import_zod.z.number().nullable().optional(),
       customerName: import_zod.z.string().optional().nullable(),
       customerPaymentType: import_zod.z.enum(["pix", "cash", "credit-card", "deb"]).optional().nullable()
     });
     const {
       type,
       quantity,
+      price,
       customerName,
       customerPaymentType
     } = createActionInventoryBodySchema.parse(req.body);
@@ -62,6 +57,7 @@ var createActionInventory = async (req, res, next) => {
           }
         },
         quantity,
+        price,
         customerName,
         customerPaymentType,
         createdBy: {
@@ -71,6 +67,17 @@ var createActionInventory = async (req, res, next) => {
         }
       }
     });
+    const inventory = await prisma_default.inventory.findUnique({
+      where: {
+        id: inventoryId
+      }
+    });
+    if (type === "output") {
+      const finalValue = inventory.quantity - quantity;
+      if (finalValue < 0) {
+        return res.status(409 /* Conflict */).send({ error: "Estoque n\xE3o pode ficar negativo." });
+      }
+    }
     const updateData = {
       ...type === "input" ? { quantity: { increment: quantity } } : type === "output" ? { quantity: { decrement: quantity } } : {},
       updatedAt: /* @__PURE__ */ new Date()
@@ -83,8 +90,7 @@ var createActionInventory = async (req, res, next) => {
     });
     return res.status(201 /* Created */).json({ message: "A\xE7\xE3o enviada com sucesso e estoque atualizado." });
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado.", message: err });
   }
 };
 // Annotate the CommonJS export names for ESM import in node:

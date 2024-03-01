@@ -56,8 +56,7 @@ var editInventory = async (req, res) => {
     });
     return res.json({ message: "Estoque editado com sucesso." }).status(201);
   } catch (err) {
-    console.log(err);
-    return res.json({ message: "Algo aconteceu de errado." }).status(500);
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 // Annotate the CommonJS export names for ESM import in node:

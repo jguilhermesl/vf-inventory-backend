@@ -23,13 +23,6 @@ __export(edit_product_exports, {
 });
 module.exports = __toCommonJS(edit_product_exports);
 
-// src/errors/internal-server-error.ts
-var InternalServerError = class extends Error {
-  constructor() {
-    super("Internal server error.");
-  }
-};
-
 // src/services/prisma.ts
 var import_client = require("@prisma/client");
 var prismaClient = new import_client.PrismaClient();
@@ -57,8 +50,7 @@ var editProduct = async (req, res, next) => {
     });
     return res.json({ message: "Produto editado com sucesso." }).status(200 /* Success */);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 // Annotate the CommonJS export names for ESM import in node:

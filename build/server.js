@@ -67,13 +67,6 @@ function corsMiddleware(req, res, next) {
 // src/routes/routes.ts
 var import_express = require("express");
 
-// src/errors/internal-server-error.ts
-var InternalServerError = class extends Error {
-  constructor() {
-    super("Internal server error.");
-  }
-};
-
 // src/services/prisma.ts
 var import_client = require("@prisma/client");
 var prismaClient = new import_client.PrismaClient();
@@ -130,10 +123,11 @@ var fetchInventory = async (req, res, next) => {
         productName: item.product.name
       };
     });
-    return res.json({ inventory, page, totalItems: quantityItems, totalPages: Math.floor(quantityItems / 20) }).status(200 /* Success */);
+    const totalItemsPerPageSize = quantityItems / 20;
+    const totalPages = totalItemsPerPageSize < 1 ? 1 : Math.ceil(totalItemsPerPageSize);
+    return res.json({ inventory, page, totalItems: quantityItems, totalPages }).status(200 /* Success */);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 
@@ -146,12 +140,14 @@ var createActionInventory = async (req, res, next) => {
     const createActionInventoryBodySchema = import_zod2.z.object({
       type: import_zod2.z.enum(["input", "output"]),
       quantity: import_zod2.z.number(),
+      price: import_zod2.z.number().nullable().optional(),
       customerName: import_zod2.z.string().optional().nullable(),
       customerPaymentType: import_zod2.z.enum(["pix", "cash", "credit-card", "deb"]).optional().nullable()
     });
     const {
       type,
       quantity,
+      price,
       customerName,
       customerPaymentType
     } = createActionInventoryBodySchema.parse(req.body);
@@ -164,6 +160,7 @@ var createActionInventory = async (req, res, next) => {
           }
         },
         quantity,
+        price,
         customerName,
         customerPaymentType,
         createdBy: {
@@ -173,6 +170,17 @@ var createActionInventory = async (req, res, next) => {
         }
       }
     });
+    const inventory = await prisma_default.inventory.findUnique({
+      where: {
+        id: inventoryId
+      }
+    });
+    if (type === "output") {
+      const finalValue = inventory.quantity - quantity;
+      if (finalValue < 0) {
+        return res.status(409 /* Conflict */).send({ error: "Estoque n\xE3o pode ficar negativo." });
+      }
+    }
     const updateData = {
       ...type === "input" ? { quantity: { increment: quantity } } : type === "output" ? { quantity: { decrement: quantity } } : {},
       updatedAt: /* @__PURE__ */ new Date()
@@ -185,15 +193,7 @@ var createActionInventory = async (req, res, next) => {
     });
     return res.status(201 /* Created */).json({ message: "A\xE7\xE3o enviada com sucesso e estoque atualizado." });
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
-  }
-};
-
-// src/errors/invalid-credentials-error.ts
-var InvalidCredentialsError = class extends Error {
-  constructor() {
-    super("Invalid credentials.");
+    return res.status(500).send({ error: "Algo aconteceu de errado.", message: err });
   }
 };
 
@@ -221,11 +221,11 @@ var login = async (req, res, next) => {
       }
     });
     if (!user) {
-      throw new InvalidCredentialsError();
+      return res.json({ error: "Credenciais inv\xE1lidas." }).status(401 /* Unauthorized */);
     }
     const passwordMatch = await (0, import_bcryptjs.compare)(password, user.passwordHash);
     if (!passwordMatch) {
-      throw new InvalidCredentialsError();
+      return res.json({ error: "Credenciais inv\xE1lidas." }).status(401 /* Unauthorized */);
     }
     const token = (0, import_jsonwebtoken.sign)(
       {
@@ -261,8 +261,7 @@ var login = async (req, res, next) => {
       refreshToken
     });
   } catch (err) {
-    const error = new InternalServerError();
-    return next(err != null ? err : error);
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 
@@ -286,7 +285,7 @@ var createUser = async (req, res, next) => {
       }
     });
     if (user) {
-      throw new EmailAlreadyExistsError();
+      return res.json({ error: "Email j\xE1 existente." }).status(409 /* Conflict */);
     }
     await prisma_default.user.create({
       data: {
@@ -298,8 +297,7 @@ var createUser = async (req, res, next) => {
     });
     return res.json({ message: "Usu\xE1rio criado com sucesso." }).status(201);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 
@@ -314,8 +312,7 @@ var deleteUser = async (req, res, next) => {
     });
     return res.json({ message: "Usu\xE1rio deletado com sucesso." }).status(201);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 
@@ -346,8 +343,7 @@ var editUser = async (req, res, next) => {
     });
     return res.json({ message: "Usu\xE1rio editado com sucesso." }).status(201);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 
@@ -362,8 +358,7 @@ var getUserProfile = async (req, res, next) => {
     });
     return res.json({ user }).status(201);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 
@@ -384,11 +379,11 @@ function isAuthenticated(req, res, next) {
   });
 }
 
-// src/errors/product-already-exists-error.ts
-var ProductAlreadyExistsError = class extends Error {
-  constructor() {
-    super("Product already exists.");
-  }
+// src/utils/generateProductCode.ts
+var generateProductCode = (name) => {
+  const parts = name.split(" ");
+  const code = parts[0].slice(0, 3).toUpperCase() + parts[1].slice(0, 3).toUpperCase() + parts[parts.length - 1].slice(parts[parts.length - 1].length - 3, parts[parts.length - 1].length).toUpperCase();
+  return code;
 };
 
 // src/http/products/create-product.ts
@@ -404,16 +399,16 @@ var createProduct = async (req, res, next) => {
       where: { name, sigla }
     });
     if (existingProduct) {
-      throw new ProductAlreadyExistsError();
+      return res.json({ error: "Produto j\xE1 existente." }).status(409 /* Conflict */);
     }
-    const code = name.slice(0, 3).toUpperCase() + name.slice(name.length - 3, name.length).toUpperCase();
+    const code = generateProductCode(name);
     await prisma_default.product.create({
       data: { code, name, sigla }
     });
     return res.json({ message: "Produto cadastrado com sucesso." }).status(201 /* Created */);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    console.log(err);
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 
@@ -432,8 +427,7 @@ var deleteProduct = async (req, res, next) => {
     });
     return res.json({ message: "Produto deletado com sucesso." }).status(200 /* Success */);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 
@@ -459,8 +453,7 @@ var editProduct = async (req, res, next) => {
     });
     return res.json({ message: "Produto editado com sucesso." }).status(200 /* Success */);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 
@@ -492,8 +485,7 @@ var editInventory = async (req, res) => {
     });
     return res.json({ message: "Estoque editado com sucesso." }).status(201);
   } catch (err) {
-    console.log(err);
-    return res.json({ message: "Algo aconteceu de errado." }).status(500);
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 
@@ -538,8 +530,7 @@ var createInventory = async (req, res, next) => {
     });
     return res.json({ message: "Estoque criado com sucesso." }).status(201);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: err });
   }
 };
 
@@ -554,8 +545,7 @@ var getProduct = async (req, res, next) => {
     });
     return res.json({ user }).status(200 /* Success */);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 
@@ -564,7 +554,7 @@ var fetchProducts = async (req, res, next) => {
   try {
     const itemsPerPage = 20;
     const { search, page = 1 } = req.query;
-    const quantityItems = await prisma_default.inventory.count({
+    const quantityItems = await prisma_default.product.count({
       where: {
         deletedAt: { equals: null }
       }
@@ -589,10 +579,11 @@ var fetchProducts = async (req, res, next) => {
         sigla: true
       }
     });
-    return res.json({ products, page, totalItems: quantityItems, totalPages: Math.floor(quantityItems / 20) }).status(200 /* Success */);
+    const totalItemsPerPageSize = quantityItems / 20;
+    const totalPages = totalItemsPerPageSize < 1 ? 1 : Math.ceil(totalItemsPerPageSize);
+    return res.json({ products, page, totalItems: quantityItems, totalPages }).status(200 /* Success */);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 
@@ -601,7 +592,7 @@ var fetchUsers = async (req, res, next) => {
   try {
     const itemsPerPage = 20;
     const { search, page = 1 } = req.query;
-    const quantityItems = await prisma_default.inventory.count({
+    const quantityItems = await prisma_default.user.count({
       where: {
         deletedAt: { equals: null }
       }
@@ -626,10 +617,11 @@ var fetchUsers = async (req, res, next) => {
         passwordHash: false
       }
     });
-    return res.json({ users, page, totalItems: quantityItems, totalPages: Math.floor(quantityItems / 20) }).status(200 /* Success */);
+    const totalItemsPerPageSize = quantityItems / 20;
+    const totalPages = totalItemsPerPageSize < 1 ? 1 : Math.ceil(totalItemsPerPageSize);
+    return res.json({ users, page, totalItems: quantityItems, totalPages }).status(200 /* Success */);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 
@@ -647,9 +639,7 @@ var deleteInventory = async (req, res, next) => {
     });
     return res.json({ message: "Estoque deletado com sucesso." }).status(200 /* Success */);
   } catch (err) {
-    console.log(err);
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 
@@ -657,8 +647,8 @@ var deleteInventory = async (req, res, next) => {
 var fetchHistory = async (req, res, next) => {
   try {
     const itemsPerPage = 20;
-    const { search, page } = req.query;
-    const quantityItems = await prisma_default.inventory.count({
+    const { search, page = 1 } = req.query;
+    const quantityItems = await prisma_default.history.count({
       where: {
         deletedAt: { equals: null }
       }
@@ -704,7 +694,8 @@ var fetchHistory = async (req, res, next) => {
         },
         quantity: true,
         id: true,
-        deletedAt: true
+        deletedAt: true,
+        price: true
       }
     });
     const history = data.map((item) => {
@@ -717,13 +708,15 @@ var fetchHistory = async (req, res, next) => {
         customerPaymentType: item.customerPaymentType,
         createdBy: item.createdBy.name,
         createdAt: item.createdAt,
-        id: item.id
+        id: item.id,
+        price: item.price
       };
     });
-    return res.json({ history, page, totalItems: quantityItems, totalPages: Math.floor(quantityItems / 20) }).status(200 /* Success */);
+    const totalItemsPerPageSize = quantityItems / 20;
+    const totalPages = totalItemsPerPageSize < 1 ? 1 : Math.ceil(totalItemsPerPageSize);
+    return res.json({ history, page, totalItems: quantityItems, totalPages }).status(200 /* Success */);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 
