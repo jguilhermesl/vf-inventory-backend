@@ -31,13 +31,13 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     });
 
     if (!user) {
-      return res.json({ error: "Credenciais inválidas." }).status(HttpsCode.Unauthorized)
+      return res.status(HttpsCode.Unauthorized).send({ error: "Credenciais inválidas." })
     }
 
     const passwordMatch = await compare(password, user.passwordHash);
 
     if (!passwordMatch) {
-      return res.json({ error: "Credenciais inválidas." }).status(HttpsCode.Unauthorized)
+      return res.status(HttpsCode.Unauthorized).send({ error: "Credenciais inválidas." })
     }
 
     const token = sign(
