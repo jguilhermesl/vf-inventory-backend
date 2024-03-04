@@ -23,13 +23,6 @@ __export(fetch_inventory_exports, {
 });
 module.exports = __toCommonJS(fetch_inventory_exports);
 
-// src/errors/internal-server-error.ts
-var InternalServerError = class extends Error {
-  constructor() {
-    super("Internal server error.");
-  }
-};
-
 // src/services/prisma.ts
 var import_client = require("@prisma/client");
 var prismaClient = new import_client.PrismaClient();
@@ -86,10 +79,11 @@ var fetchInventory = async (req, res, next) => {
         productName: item.product.name
       };
     });
-    return res.json({ inventory, page, totalItems: quantityItems, totalPages: Math.floor(quantityItems / 20) }).status(200 /* Success */);
+    const totalItemsPerPageSize = quantityItems / 20;
+    const totalPages = totalItemsPerPageSize < 1 ? 1 : Math.ceil(totalItemsPerPageSize);
+    return res.json({ inventory, page, totalItems: quantityItems, totalPages }).status(200 /* Success */);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 // Annotate the CommonJS export names for ESM import in node:

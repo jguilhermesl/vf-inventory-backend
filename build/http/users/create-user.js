@@ -31,22 +31,6 @@ var prisma_default = prismaClient;
 // src/http/users/create-user.ts
 var import_zod = require("zod");
 var import_bcryptjs = require("bcryptjs");
-
-// src/errors/email-already-exists-error.ts
-var EmailAlreadyExistsError = class extends Error {
-  constructor() {
-    super("Email j\xE1 existe.");
-  }
-};
-
-// src/errors/internal-server-error.ts
-var InternalServerError = class extends Error {
-  constructor() {
-    super("Internal server error.");
-  }
-};
-
-// src/http/users/create-user.ts
 var createUser = async (req, res, next) => {
   try {
     const createUserBodySchema = import_zod.z.object({
@@ -64,7 +48,7 @@ var createUser = async (req, res, next) => {
       }
     });
     if (user) {
-      throw new EmailAlreadyExistsError();
+      return res.json({ error: "Email j\xE1 existente." }).status(409 /* Conflict */);
     }
     await prisma_default.user.create({
       data: {
@@ -76,8 +60,7 @@ var createUser = async (req, res, next) => {
     });
     return res.json({ message: "Usu\xE1rio criado com sucesso." }).status(201);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 // Annotate the CommonJS export names for ESM import in node:

@@ -23,24 +23,17 @@ __export(create_product_exports, {
 });
 module.exports = __toCommonJS(create_product_exports);
 
-// src/errors/internal-server-error.ts
-var InternalServerError = class extends Error {
-  constructor() {
-    super("Internal server error.");
-  }
-};
-
-// src/errors/product-already-exists-error.ts
-var ProductAlreadyExistsError = class extends Error {
-  constructor() {
-    super("Product already exists.");
-  }
-};
-
 // src/services/prisma.ts
 var import_client = require("@prisma/client");
 var prismaClient = new import_client.PrismaClient();
 var prisma_default = prismaClient;
+
+// src/utils/generateProductCode.ts
+var generateProductCode = (name) => {
+  const parts = name.split(" ");
+  const code = parts[0].slice(0, 3).toUpperCase() + parts[1].slice(0, 3).toUpperCase() + parts[parts.length - 1].slice(parts[parts.length - 1].length - 3, parts[parts.length - 1].length).toUpperCase();
+  return code;
+};
 
 // src/http/products/create-product.ts
 var import_zod = require("zod");
@@ -55,16 +48,16 @@ var createProduct = async (req, res, next) => {
       where: { name, sigla }
     });
     if (existingProduct) {
-      throw new ProductAlreadyExistsError();
+      return res.json({ error: "Produto j\xE1 existente." }).status(409 /* Conflict */);
     }
-    const code = name.slice(0, 3).toUpperCase() + name.slice(name.length - 3, name.length).toUpperCase();
+    const code = generateProductCode(name);
     await prisma_default.product.create({
       data: { code, name, sigla }
     });
     return res.json({ message: "Produto cadastrado com sucesso." }).status(201 /* Created */);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    console.log(err);
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 // Annotate the CommonJS export names for ESM import in node:

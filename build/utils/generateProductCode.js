@@ -16,33 +16,18 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// src/http/users/get-user.ts
-var get_user_exports = {};
-__export(get_user_exports, {
-  getUserProfile: () => getUserProfile
+// src/utils/generateProductCode.ts
+var generateProductCode_exports = {};
+__export(generateProductCode_exports, {
+  generateProductCode: () => generateProductCode
 });
-module.exports = __toCommonJS(get_user_exports);
-
-// src/services/prisma.ts
-var import_client = require("@prisma/client");
-var prismaClient = new import_client.PrismaClient();
-var prisma_default = prismaClient;
-
-// src/http/users/get-user.ts
-var getUserProfile = async (req, res, next) => {
-  try {
-    const id = req.userState.sub;
-    const user = await prisma_default.user.findUnique({
-      where: {
-        id
-      }
-    });
-    return res.json({ user }).status(201);
-  } catch (err) {
-    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
-  }
+module.exports = __toCommonJS(generateProductCode_exports);
+var generateProductCode = (name) => {
+  const parts = name.split(" ");
+  const code = parts[0].slice(0, 3).toUpperCase() + parts[1].slice(0, 3).toUpperCase() + parts[parts.length - 1].slice(parts[parts.length - 1].length - 3, parts[parts.length - 1].length).toUpperCase();
+  return code;
 };
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
-  getUserProfile
+  generateProductCode
 });

@@ -23,13 +23,6 @@ __export(fetch_history_exports, {
 });
 module.exports = __toCommonJS(fetch_history_exports);
 
-// src/errors/internal-server-error.ts
-var InternalServerError = class extends Error {
-  constructor() {
-    super("Internal server error.");
-  }
-};
-
 // src/services/prisma.ts
 var import_client = require("@prisma/client");
 var prismaClient = new import_client.PrismaClient();
@@ -39,8 +32,8 @@ var prisma_default = prismaClient;
 var fetchHistory = async (req, res, next) => {
   try {
     const itemsPerPage = 20;
-    const { search, page } = req.query;
-    const quantityItems = await prisma_default.inventory.count({
+    const { search, page = 1 } = req.query;
+    const quantityItems = await prisma_default.history.count({
       where: {
         deletedAt: { equals: null }
       }
@@ -86,7 +79,8 @@ var fetchHistory = async (req, res, next) => {
         },
         quantity: true,
         id: true,
-        deletedAt: true
+        deletedAt: true,
+        price: true
       }
     });
     const history = data.map((item) => {
@@ -99,13 +93,15 @@ var fetchHistory = async (req, res, next) => {
         customerPaymentType: item.customerPaymentType,
         createdBy: item.createdBy.name,
         createdAt: item.createdAt,
-        id: item.id
+        id: item.id,
+        price: item.price
       };
     });
-    return res.json({ history, page, totalItems: quantityItems, totalPages: Math.floor(quantityItems / 20) }).status(200 /* Success */);
+    const totalItemsPerPageSize = quantityItems / 20;
+    const totalPages = totalItemsPerPageSize < 1 ? 1 : Math.ceil(totalItemsPerPageSize);
+    return res.json({ history, page, totalItems: quantityItems, totalPages }).status(200 /* Success */);
   } catch (err) {
-    next(err);
-    throw new InternalServerError();
+    return res.status(500).send({ error: "Algo aconteceu de errado", message: err });
   }
 };
 // Annotate the CommonJS export names for ESM import in node:
