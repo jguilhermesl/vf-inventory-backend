@@ -193,11 +193,11 @@ var login = async (req, res, next) => {
       }
     });
     if (!user) {
-      return res.json({ error: "Credenciais inv\xE1lidas." }).status(401 /* Unauthorized */);
+      return res.status(401 /* Unauthorized */).send({ error: "Credenciais inv\xE1lidas." });
     }
     const passwordMatch = await (0, import_bcryptjs.compare)(password, user.passwordHash);
     if (!passwordMatch) {
-      return res.json({ error: "Credenciais inv\xE1lidas." }).status(401 /* Unauthorized */);
+      return res.status(401 /* Unauthorized */).send({ error: "Credenciais inv\xE1lidas." });
     }
     const token = (0, import_jsonwebtoken.sign)(
       {
