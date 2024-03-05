@@ -17,7 +17,7 @@ export const createActionInventory = async (
       quantity: z.number(),
       price: z.number().nullable().optional(),
       customerName: z.string().optional().nullable(),
-      customerPaymentType: z.enum(["pix", "cash", "credit-card", "deb"]).optional().nullable(),
+      customerPaymentType: z.enum(["pix", "money", "credit-card", "debit-card", "prazo"]).optional().nullable(),
     });
 
     const {
