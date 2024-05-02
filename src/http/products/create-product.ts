@@ -1,15 +1,11 @@
 import { HttpsCode } from "@/constants/errors";
-import { InternalServerError } from "@/errors/internal-server-error";
-import { ProductAlreadyExistsError } from "@/errors/product-already-exists-error";
 import prismaClient from "@/services/prisma";
-import { generateProductCode } from "@/utils/generateProductCode";
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import { z } from "zod";
 
 export const createProduct = async (
   req: Request,
-  res: Response,
-  next: NextFunction
+  res: Response
 ) => {
   try {
     const createProductBodySchema = z.object({
