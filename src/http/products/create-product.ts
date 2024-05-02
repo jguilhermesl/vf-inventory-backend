@@ -24,7 +24,7 @@ export const createProduct = async (
     });
 
     if (existingProduct) {
-      return res.json({ error: "Produto já existente." }).status(HttpsCode.Conflict)
+      return res.status(HttpsCode.Conflict).send({ error: "Produto já existente." })
     }
 
     const code = generateProductCode(name)
@@ -34,8 +34,8 @@ export const createProduct = async (
     });
 
     return res
-      .json({ message: "Produto cadastrado com sucesso." })
-      .status(HttpsCode.Created);
+      .status(HttpsCode.Created)
+      .send({ message: "Produto cadastrado com sucesso." });
 
   } catch (err) {
     console.log(err)
