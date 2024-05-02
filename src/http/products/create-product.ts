@@ -27,10 +27,8 @@ export const createProduct = async (
       return res.status(HttpsCode.Conflict).send({ error: "Produto já existente." })
     }
 
-    const code = generateProductCode(name)
-
     await prismaClient.product.create({
-      data: { code, name, sigla },
+      data: { name, sigla },
     });
 
     return res

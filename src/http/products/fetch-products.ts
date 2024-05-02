@@ -31,7 +31,6 @@ export const fetchProducts = async (req: Request, res: Response, next: NextFunct
       select: {
         id: true,
         name: true,
-        code: true,
         sigla: true
       }
     });
