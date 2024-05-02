@@ -15,7 +15,7 @@ export const createActionInventory = async (
     const createActionInventoryBodySchema = z.object({
       type: z.enum(["input", "output"]),
       quantity: z.number(),
-      price: z.number().nullable().optional(),
+      price: z.string().nullable().optional(),
       customerName: z.string().optional().nullable(),
       customerPaymentType: z.enum(["pix", "money", "credit-card", "debit-card", "prazo"]).optional().nullable(),
     });
