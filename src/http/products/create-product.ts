@@ -19,7 +19,7 @@ export const createProduct = async (
 
     const { sigla, name } = createProductBodySchema.parse(req.body);
 
-    const existingProduct = await prismaClient.product.findUnique({
+    const existingProduct = await prismaClient.product.findFirst({
       where: { name, sigla },
     });
 
